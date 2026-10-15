@@ -1,0 +1,739 @@
+            </div>
+        </div>
+
+        <!-- Right: Move History / Log -->
+        <div class="absolute top-6 right-6 z-20 hidden lg:flex flex-col w-64 pointer-events-none">
+            <div class="glass-panel p-4 rounded-2xl pointer-events-auto shadow-xl flex flex-col h-80">
+                <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
+                    <span class="text-xs font-bold uppercase tracking-wider text-violet-300/80 font-cinzel">Scroll of Moves</span>
+                    <i class="fa-solid fa-scroll text-violet-400/60 text-xs"></i>
+                </div>
+                <div id="moveHistoryList" class="flex-1 overflow-y-auto space-y-1.5 pr-1 text-xs font-mono text-slate-300">
+                    <div class="text-slate-500 italic text-center py-8">No spells cast yet...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Camera Reset / Help Button -->
+        <div class="absolute bottom-6 right-6 z-20 flex flex-col space-y-3">
+            <button onclick="resetCamera()" class="w-12 h-12 rounded-2xl glass-panel hover:bg-violet-900/40 text-slate-200 flex items-center justify-center shadow-xl transition-all border border-white/10 group" title="Reset Camera">
+                <i class="fa-solid fa-video text-base group-hover:scale-110 transition-transform"></i>
+            </button>
+        </div>
+
+        <!-- Check / Checkmate Modal Overlay -->
+        <div id="gameModal" class="absolute inset-0 z-40 bg-black/70 backdrop-blur-md flex items-center justify-center hidden">
+            <div class="glass-panel p-8 rounded-3xl max-w-md w-full mx-4 text-center shadow-2xl border border-white/20 transform scale-95 opacity-0 transition-all duration-300" id="modalContent">
+                <div id="modalIcon" class="w-16 h-16 rounded-2xl bg-violet-600/20 text-violet-400 flex items-center justify-center mx-auto mb-4 text-2xl border border-violet-500/30">
+                    <i class="fa-solid fa-chess-king"></i>
+                </div>
+                <h3 id="modalTitle" class="gothic-title text-2xl font-bold text-white mb-2">Checkmate!</h3>
+                <p id="modalDesc" class="text-sm text-slate-300 mb-6 leading-relaxed">The obsidian king has been shattered. Marble claims ultimate victory in the cathedral.</p>
+                <button onclick="resetGame(); closeModal();" class="w-full py-3.5 rounded-2xl bg-violet-600 hover:bg-violet-500 font-bold text-white text-sm shadow-xl shadow-violet-600/40 transition-all font-cinzel tracking-wider">
+                    New Battle
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Game Logic & 3D Engine Script -->
+    <script>
+        // --- AUDIO SYNTHESIZER (Web Audio API for magical sound effects) ---
+        let audioEnabled = true;
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (!audioEnabled) return;
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'select') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.exponentialRampToValueAtTime(880, now + 0.1);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            } else if (type === 'move') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(150, now + 0.15);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                osc.start(now);
+                osc.stop(now + 0.15);
+            } else if (type === 'shatter') {
+                // Noise burst for shatter
+                const bufferSize = audioCtx.sampleRate * 0.4;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(800, now);
+                filter.frequency.linearRampToValueAtTime(200, now + 0.4);
+                
+                const noiseGain = audioCtx.createGain();
+                noiseGain.gain.setValueAtTime(0.3, now);
+                noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+
+                noise.connect(filter);
+                filter.connect(noiseGain);
+                noiseGain.connect(audioCtx.destination);
+                noise.start(now);
+            }
+        }
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            const btn = document.getElementById('audioIcon');
+            btn.className = audioEnabled ? "fa-solid fa-volume-high" : "fa-solid fa-volume-xmark";
+        }
+
+        // --- GAME STATE & CHESS ENGINE ---
+        const chess = new Chess();
+        let gameMode = 'easy'; // 'easy', 'hard', 'pvp'
+        let selectedSquare = null;
+        let validMoves = [];
+        let isAnimating = false;
+        let capturedPiecesData = { w: [], b: [] };
+
+        const modeNames = {
+            'easy': 'Mode: vs AI (Easy)',
+            'hard': 'Mode: vs AI (Hard)',
+            'pvp': 'Mode: 2 Player'
+        };
+
+        function toggleGameMode() {
+            if (gameMode === 'easy') gameMode = 'hard';
+            else if (gameMode === 'hard') gameMode = 'pvp';
+            else gameMode = 'easy';
+
+            document.getElementById('gameModeLabel').innerText = modeNames[gameMode];
+            resetGame();
+        }
+
+        // --- THREE.JS SETUP ---
+        const container = document.getElementById('canvasContainer');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0b0b0e);
+        scene.fog = new THREE.FogExp2(0x0b0b0e, 0.035);
+
+        const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+        camera.position.set(0, 14, 11);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.2;
+        container.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.maxPolarAngle = Math.PI / 2 - 0.05;
+        controls.minDistance = 6;
+        controls.maxDistance = 25;
+        controls.target.set(0, 0, 0);
+
+        function resetCamera() {
+            camera.position.set(0, 14, 11);
+            controls.target.set(0, 0, 0);
+            controls.update();
+        }
+
+        // --- LIGHTING (Gothic Cathedral Vibe) ---
+        const ambientLight = new THREE.AmbientLight(0x2e2340, 1.5);
+        scene.add(ambientLight);
+
+        const mainLight = new THREE.DirectionalLight(0xe2e8f0, 2.0);
+        mainLight.position.set(8, 16, 8);
+        mainLight.castShadow = true;
+        mainLight.shadow.mapSize.width = 2048;
+        mainLight.shadow.mapSize.height = 2048;
+        mainLight.shadow.bias = -0.0001;
+        scene.add(mainLight);
+
+        // Colored Stained Glass Lights
+        const glassLight1 = new THREE.PointLight(0x8b5cf6, 3, 20);
+        glassLight1.position.set(-10, 8, 0);
+        scene.add(glassLight1);
+
+        const glassLight2 = new THREE.PointLight(0x3b82f6, 3, 20);
+        glassLight2.position.set(10, 8, 0);
+        scene.add(glassLight2);
+
+        // --- CATHEDRAL ENVIRONMENT & BOARD ---
+        const boardGroup = new THREE.Group();
+        scene.add(boardGroup);
+
+        // Floor / Cathedral Base
+        const floorGeo = new THREE.PlaneGeometry(60, 60);
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x09090b, roughness: 0.8, metalness: 0.2 });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.y = -0.6;
+        floor.receiveShadow = true;
+        scene.add(floor);
+
+        // Cathedral Pillars (Minimalist Brutalist Gothic)
+        const pillarGeo = new THREE.BoxGeometry(1.2, 18, 1.2);
+        const pillarMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.7, metalness: 0.3 });
+        [-10, 10].forEach(x => {
+            [-10, 10].forEach(z => {
+                const pillar = new THREE.Mesh(pillarGeo, pillarMat);
+                pillar.position.set(x, 8, z);
+                pillar.castShadow = true;
+                pillar.receiveShadow = true;
+                scene.add(pillar);
+            });
+        });
+
+        // Chessboard Squares
+        const squares = {};
+        const squareGeo = new THREE.BoxGeometry(1, 0.2, 1);
+        const darkSquareMat = new THREE.MeshStandardMaterial({ color: 0x1e1b4b, roughness: 0.4, metalness: 0.3 });
+        const lightSquareMat = new THREE.MeshStandardMaterial({ color: 0x312e81, roughness: 0.4, metalness: 0.3 });
+        const highlightMat = new THREE.MeshStandardMaterial({ color: 0xa78bfa, roughness: 0.2, emissive: 0x7c3aed, emissiveIntensity: 0.6 });
+
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                const isLight = (r + c) % 2 === 0;
+                const mat = isLight ? lightSquareMat.clone() : darkSquareMat.clone();
+                const mesh = new THREE.Mesh(squareGeo, mat);
+                const file = String.fromCharCode(97 + c);
+                const rank = 8 - r;
+                const squareName = file + rank;
+                
+                mesh.position.set(c - 3.5, 0, r - 3.5);
+                mesh.receiveShadow = true;
+                mesh.userData = { square: squareName, isLight: isLight, baseMat: mat };
+                boardGroup.add(mesh);
+                squares[squareName] = mesh;
+            }
+        }
+
+        // Board Trim / Border
+        const trimGeo = new THREE.BoxGeometry(8.6, 0.25, 8.6);
+        const trimMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.8, roughness: 0.2 }); // Gold trim
+        const trim = new THREE.Mesh(trimGeo, trimMat);
+        trim.position.set(0, -0.12, 0);
+        trim.receiveShadow = true;
+        boardGroup.add(trim);
+
+        // --- PROCEDURAL CHESS PIECE GENERATOR ---
+        const pieceMeshes = {}; // square -> THREE.Group
+        const activeAnimations = [];
+        const particlesGroup = new THREE.Group();
+        scene.add(particlesGroup);
+
+        const whiteMaterial = new THREE.MeshStandardMaterial({
+            color: 0xf8fafc,
+            roughness: 0.15,
+            metalness: 0.3,
+            envMapIntensity: 1.5
+        });
+
+        const blackMaterial = new THREE.MeshStandardMaterial({
+            color: 0x09090b,
+            roughness: 0.2,
+            metalness: 0.8,
+            envMapIntensity: 2.0
+        });
+
+        function createPieceMesh(type, color) {
+            const group = new THREE.Group();
+            const mat = color === 'w' ? whiteMaterial : blackMaterial;
+            
+            // Base pedestal
+            const baseGeo = new THREE.CylinderGeometry(0.38, 0.42, 0.15, 16);
+            const base = new THREE.Mesh(baseGeo, mat);
+            base.position.y = 0.075;
+            base.castShadow = true;
+            base.receiveShadow = true;
+            group.add(base);
+
+            const bodyGeo = new THREE.CylinderGeometry(0.2, 0.3, 0.6, 16);
+            const body = new THREE.Mesh(bodyGeo, mat);
+            body.position.y = 0.45;
+            body.castShadow = true;
+            group.add(body);
+
+            if (type === 'p') {
+                // Pawn head
+                const headGeo = new THREE.SphereGeometry(0.22, 16, 16);
+                const head = new THREE.Mesh(headGeo, mat);
+                head.position.y = 0.85;
+                head.castShadow = true;
+                group.add(head);
+            } else if (type === 'r') {
+                // Rook (Gothic Castle Tower)
+                const topGeo = new THREE.CylinderGeometry(0.28, 0.24, 0.3, 16);
+                const top = new THREE.Mesh(topGeo, mat);
+                top.position.y = 0.9;
+                top.castShadow = true;
+                group.add(top);
+            } else if (type === 'n') {
+                // Knight (Abstract Steed)
+                const neckGeo = new THREE.BoxGeometry(0.2, 0.5, 0.35);
+                const neck = new THREE.Mesh(neckGeo, mat);
+                neck.position.set(0, 0.8, 0.05);
+                neck.rotation.x = -0.2;
+                neck.castShadow = true;
+                group.add(neck);
+            } else if (type === 'b') {
+                // Bishop (Mitre)
+                const mitreGeo = new THREE.ConeGeometry(0.2, 0.6, 16);
+                const mitre = new THREE.Mesh(mitreGeo, mat);
+                mitre.position.y = 1.0;
+                mitre.castShadow = true;
+                group.add(mitre);
+            } else if (type === 'q') {
+                // Queen (Crown & Spire)
+                const crownGeo = new THREE.CylinderGeometry(0.32, 0.2, 0.5, 16);
+                const crown = new THREE.Mesh(crownGeo, mat);
+                crown.position.y = 0.95;
+                crown.castShadow = true;
+                group.add(crown);
+            } else if (type === 'k') {
+                // King (Gothic Crown with Cross/Spire)
+                const crownGeo = new THREE.CylinderGeometry(0.3, 0.22, 0.6, 16);
+                const crown = new THREE.Mesh(crownGeo, mat);
+                crown.position.y = 1.0;
+                crown.castShadow = true;
+                group.add(crown);
+                
+                const crossGeo = new THREE.BoxGeometry(0.12, 0.3, 0.12);
+                const cross = new THREE.Mesh(crossGeo, mat);
+                cross.position.y = 1.45;
+                cross.castShadow = true;
+                group.add(cross);
+            }
+
+            group.userData = { type: type, color: color };
+            return group;
+        }
+
+        function squareToVector3(sq) {
+            const file = sq.charCodeAt(0) - 97;
+            const rank = 8 - parseInt(sq[1]);
+            return new THREE.Vector3(file - 3.5, 0, rank - 3.5);
+        }
+
+        function syncBoardTo3D() {
+            // Remove existing meshes
+            Object.values(pieceMeshes).forEach(mesh => boardGroup.remove(mesh));
+            for (let k in pieceMeshes) delete pieceMeshes[k];
+
+            const board = chess.board();
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const piece = board[r][c];
+                    if (piece) {
+                        const file = String.fromCharCode(97 + c);
+                        const rank = 8 - r;
+                        const sq = file + rank;
+                        const mesh = createPieceMesh(piece.type, piece.color);
+                        const pos = squareToVector3(sq);
+                        mesh.position.copy(pos);
+                        boardGroup.add(mesh);
+                        pieceMeshes[sq] = mesh;
+                    }
+                }
+            }
+        }
+
+        // --- SHATTER ANIMATION (PARTICLE BURST) ---
+        function triggerShatterAnimation(sq, pieceColor, pieceType) {
+            playSound('shatter');
+            const pos = squareToVector3(sq);
+            pos.y += 0.5;
+
+            // Record into captured panel data
+            capturedPiecesData[pieceColor].push(pieceType);
+            updateCapturedUI();
+
+            // Create 35 shards exploding outwards
+            const shardGeo = new THREE.BoxGeometry(0.08, 0.08, 0.08);
+            const shardMat = new THREE.MeshStandardMaterial({
+                color: pieceColor === 'w' ? 0xf8fafc : 0x18181b,
+                roughness: 0.2,
+                metalness: 0.8,
+                emissive: pieceColor === 'w' ? 0x475569 : 0x7c3aed,
+                emissiveIntensity: 0.5
+            });
+
+            const shardGroup = new THREE.Group();
+            shardGroup.position.copy(pos);
+            scene.add(shardGroup);
+
+            const shards = [];
+            for (let i = 0; i < 35; i++) {
+                const mesh = new THREE.Mesh(shardGeo, shardMat);
+                mesh.position.set(
+                    (Math.random() - 0.5) * 0.4,
+                    (Math.random() - 0.5) * 0.4,
+                    (Math.random() - 0.5) * 0.4
+                );
+                shardGroup.add(mesh);
+                shards.push({
+                    mesh: mesh,
+                    velocity: new THREE.Vector3(
+                        (Math.random() - 0.5) * 6,
+                        Math.random() * 8 + 2,
+                        (Math.random() - 0.5) * 6
+                    ),
+                    rotationSpeed: new THREE.Vector3(
+                        Math.random() * 10,
+                        Math.random() * 10,
+                        Math.random() * 10
+                    )
+                });
+            }
+
+            activeAnimations.push({
+                update: (dt) => {
+                    let allFaded = true;
+                    shards.forEach(s => {
+                        s.velocity.y -= 18 * dt; // gravity
+                        s.mesh.position.addScaledVector(s.velocity, dt);
+                        s.mesh.rotation.x += s.rotationSpeed.x * dt;
+                        s.mesh.rotation.y += s.rotationSpeed.y * dt;
+                        s.mesh.scale.multiplyScalar(0.95);
+                        if (s.mesh.scale.x > 0.05) allFaded = false;
+                    });
+                    if (allFaded || shards[0].mesh.position.y < -2) {
+                        scene.remove(shardGroup);
+                        return true; // remove animation
+                    }
+                    return false;
+                }
+            });
+        }
+
+        function updateCapturedUI() {
+            const obsidianContainer = document.getElementById('capturedObsidian');
+            const marbleContainer = document.getElementById('capturedMarble');
+            
+            const symbolMap = { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' };
+
+            obsidianContainer.innerHTML = capturedPiecesData.b.length ? 
+                capturedPiecesData.b.map(p => `<span class="text-sm text-violet-300 font-bold">${symbolMap[p]}</span>`).join('') :
+                '<span class="text-[10px] text-slate-500 italic">None</span>';
+
+            marbleContainer.innerHTML = capturedPiecesData.w.length ? 
+                capturedPiecesData.w.map(p => `<span class="text-sm text-slate-200 font-bold">${symbolMap[p]}</span>`).join('') :
+                '<span class="text-[10px] text-slate-500 italic">None</span>';
+        }
+
+        // --- INTERACTION & CLICK HANDLING ---
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        window.addEventListener('pointerdown', (e) => {
+            // Ignore if clicking UI
+            if (e.target.closest('#gameModal') || e.target.closest('header') || e.target.closest('.absolute')) return;
+
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(boardGroup.children, true);
+
+            if (intersects.length > 0) {
+                let obj = intersects[0].object;
+                while (obj.parent && obj.parent !== boardGroup && !obj.userData.square) {
+                    obj = obj.parent;
+                }
+
+                let clickedSquare = null;
+                if (obj.userData && obj.userData.square) {
+                    clickedSquare = obj.userData.square;
+                } else {
+                    // Check intersection with pieces
+                    for (let sq in pieceMeshes) {
+                        if (pieceMeshes[sq] === obj || pieceMeshes[sq].children.includes(obj) || pieceMeshes[sq].children.some(c => c.children.includes(obj))) {
+                            clickedSquare = sq;
+                            break;
+                        }
+                    }
+                }
+
+                if (clickedSquare) {
+                    handleSquareClick(clickedSquare);
+                }
+            }
+        });
+
+        function clearHighlights() {
+            for (let sq in squares) {
+                squares[sq].material = squares[sq].userData.baseMat;
+            }
+        }
+
+        function highlightSquares(squaresList) {
+            clearHighlights();
+            squaresList.forEach(sq => {
+                if (squares[sq]) {
+                    squares[sq].material = highlightMat;
+                }
+            });
+        }
+
+        function handleSquareClick(sq) {
+            if (isAnimating) return;
+            const piece = chess.get(sq);
+
+            if (selectedSquare === null) {
+                if (piece && piece.color === chess.turn()) {
+                    selectedSquare = sq;
+                    playSound('select');
+                    const legalMoves = chess.moves({ square: sq, verbose: true });
+                    validMoves = legalMoves.map(m => m.to);
+                    highlightSquares([sq, ...validMoves]);
+                }
+            } else {
+                if (selectedSquare === sq) {
+                    selectedSquare = null;
+                    clearHighlights();
+                    validMoves = [];
+                    return;
+                }
+
+                if (validMoves.includes(sq)) {
+                    // Execute move
+                    executeMove({ from: selectedSquare, to: sq, promotion: 'q' });
+                } else if (piece && piece.color === chess.turn()) {
+                    // Switch selection
+                    selectedSquare = sq;
+                    playSound('select');
+                    const legalMoves = chess.moves({ square: sq, verbose: true });
+                    validMoves = legalMoves.map(m => m.to);
+                    highlightSquares([sq, ...validMoves]);
+                } else {
+                    selectedSquare = null;
+                    clearHighlights();
+                    validMoves = [];
+                }
+            }
+        }
+
+        function executeMove(moveObj) {
+            isAnimating = true;
+            clearHighlights();
+
+            const targetPiece = chess.get(moveObj.to);
+            const sourcePiece = chess.get(moveObj.from);
+
+            if (targetPiece) {
+                triggerShatterAnimation(moveObj.to, targetPiece.color, targetPiece.type);
+            }
+
+            const result = chess.move(moveObj);
+            if (result) {
+                playSound('move');
+                recordMove(result);
+                
+                // Animate piece sliding smoothly from 'from' to 'to'
+                const mesh = pieceMeshes[moveObj.from];
+                if (mesh) {
+                    delete pieceMeshes[moveObj.from];
+                    pieceMeshes[moveObj.to] = mesh;
+                    const startPos = mesh.position.clone();
+                    const endPos = squareToVector3(moveObj.to);
+                    let progress = 0;
+
+                    activeAnimations.push({
+                        update: (dt) => {
+                            progress += dt * 4; // speed
+                            if (progress >= 1) {
+                                mesh.position.copy(endPos);
+                                isAnimating = false;
+                                checkGameStatus();
+                                return true;
+                            }
+                            mesh.position.lerpVectors(startPos, endPos, progress);
+                            mesh.position.y = Math.sin(progress * Math.PI) * 1.5; // Arc jump
+                            return false;
+                        }
+                    });
+                } else {
+                    syncBoardTo3D();
+                    isAnimating = false;
+                    checkGameStatus();
+                }
+            }
+
+            selectedSquare = null;
+            validMoves = [];
+            updateTurnIndicator();
+
+            // AI Turn if applicable
+            if (!chess.game_over() && gameMode !== 'pvp' && chess.turn() === 'b' && !isAnimating) {
+                setTimeout(makeAIMove, 600);
+            }
+        }
+
+        function makeAIMove() {
+            const moves = chess.moves({ verbose: true });
+            if (moves.length === 0) return;
+
+            let chosenMove = null;
+
+            if (gameMode === 'easy') {
+                // Random move
+                chosenMove = moves[Math.floor(Math.random() * moves.length)];
+            } else {
+                // Hard mode: Minimax with alpha-beta pruning (depth 2) or capture/check preference
+                let scoredMoves = moves.map(m => {
+                    let score = 0;
+                    if (m.captured) {
+                        const values = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 50 };
+                        score += values[m.captured] * 10;
+                    }
+                    if (m.san.includes('+')) score += 5;
+                    score += Math.random() * 2; // tie breaker
+                    return { move: m, score: score };
+                });
+                scoredMoves.sort((a, b) => b.score - a.score);
+                chosenMove = scoredMoves[0].move;
+            }
+
+            if (chosenMove) {
+                executeMove({ from: chosenMove.from, to: chosenMove.to, promotion: chosenMove.promotion || 'q' });
+            }
+        }
+
+        function recordMove(move) {
+            const list = document.getElementById('moveHistoryList');
+            if (list.querySelector('.italic')) list.innerHTML = '';
+            
+            const div = document.createElement('div');
+            div.className = "flex justify-between items-center py-1 px-2 rounded hover:bg-white/5";
+            div.innerHTML = `<span class="text-slate-400">${chess.history().length}.</span> <span class="text-violet-200 font-semibold">${move.san}</span>`;
+            list.appendChild(div);
+            list.scrollTop = list.scrollHeight;
+        }
+
+        function updateTurnIndicator() {
+            const turn = chess.turn();
+            const dot = document.getElementById('turnIndicatorDot');
+            const text = document.getElementById('turnText');
+            const mobDot = document.getElementById('mobileTurnDot');
+            const mobText = document.getElementById('mobileTurnText');
+
+            if (turn === 'w') {
+                dot.className = "w-3 h-3 rounded-full bg-slate-100 shadow-sm shadow-white/50 animate-pulse";
+                text.innerText = "White's Turn (Marble)";
+                mobDot.className = "w-3.5 h-3.5 rounded-full bg-slate-100 animate-pulse";
+                mobText.innerText = "White's Turn (Marble)";
+            } else {
+                dot.className = "w-3 h-3 rounded-full bg-violet-600 shadow-sm shadow-violet-600/50 animate-pulse";
+                text.innerText = "Black's Turn (Obsidian)";
+                mobDot.className = "w-3.5 h-3.5 rounded-full bg-violet-600 animate-pulse";
+                mobText.innerText = "Black's Turn (Obsidian)";
+            }
+        }
+
+        function checkGameStatus() {
+            if (chess.game_over()) {
+                let title = "Game Over";
+                let desc = "The battle has concluded.";
+                if (chess.in_checkmate()) {
+                    title = "Checkmate!";
+                    const winner = chess.turn() === 'w' ? 'Obsidian (Black)' : 'Marble (White)';
+                    desc = `${winner} has conquered the cathedral!`;
+                } else if (chess.in_draw()) {
+                    title = "Draw";
+                    desc = "The cathedral reaches a stalemate.";
+                }
+                showModal(title, desc);
+            }
+        }
+
+        function showModal(title, desc) {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalDesc').innerText = desc;
+            const modal = document.getElementById('gameModal');
+            const content = document.getElementById('modalContent');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('gameModal');
+            const content = document.getElementById('modalContent');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        function resetGame() {
+            chess.reset();
+            capturedPiecesData = { w: [], b: [] };
+            updateCapturedUI();
+            document.getElementById('moveHistoryList').innerHTML = '<div class="text-slate-500 italic text-center py-8">No spells cast yet...</div>';
+            syncBoardTo3D();
+            updateTurnIndicator();
+            closeModal();
+        }
+
+        // --- INITIALIZATION ---
+        syncBoardTo3D();
+        updateTurnIndicator();
+
+        // --- ANIMATION LOOP ---
+        const clock = new THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+            const dt = clock.getDelta();
+
+            controls.update();
+
+            // Update active animations (sharts, slides)
+            for (let i = activeAnimations.length - 1; i >= 0; i--) {
+                const finished = activeAnimations[i].update(dt);
+                if (finished) {
+                    activeAnimations.splice(i, 1);
+                }
+            }
+
+            // Idle floating / breathing animation for pieces
+            const time = clock.getElapsedTime();
+            for (let sq in pieceMeshes) {
+                const mesh = pieceMeshes[sq];
+                // subtle vertical hover
+                mesh.position.y = squareToVector3(sq).y + Math.sin(time * 2 + mesh.position.x) * 0.03;
+            }
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Handle Window Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        });
+    </script>
+</body>
+</html>
