@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wizard's Chess 3D — Grand Gothic Cathedral Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #0e0a18;
+            color: #f3f4f6;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow: hidden;
+            user-select: none;
+        }
+        .font-cinzel {
+            font-family: 'Cinzel', serif;
+        }
+        .glass-pill {
+            background: rgba(20, 16, 32, 0.86);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+        .mode-btn.active {
+            background: linear-gradient(135deg, #7c3aed, #4c1d95);
+            color: #ffffff;
+            border: 1px solid rgba(216, 180, 254, 0.55);
+            box-shadow: 0 0 18px rgba(139, 92, 246, 0.5);
+        }
+        .icon-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .icon-btn:hover {
+            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 0.12);
+        }
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 12, 24, 0.4);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(139, 92, 246, 0.45);
+            border-radius: 4px;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 12px rgba(245, 158, 11, 0.3); }
+            50% { box-shadow: 0 0 24px rgba(245, 158, 11, 0.7); }
+        }
+        .check-banner {
+            animation: pulseGlow 1.5s infinite;
+        }
+    </style>
+</head>
+<body class="relative w-full h-full">
+
+    <!-- 3D WebGL Viewport -->
+    <div id="canvasContainer" class="w-full h-full absolute inset-0 cursor-grab active:cursor-grabbing"></div>
+
+    <!-- Single-Level Floating Top Navigation Bar -->
+    <header class="fixed top-4 left-4 right-4 z-30 glass-pill rounded-2xl px-5 py-2.5 flex items-center justify-between">
+        <!-- Brand & Turn Status -->
+        <div class="flex items-center space-x-3.5">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 via-indigo-600 to-amber-600 flex items-center justify-center shadow-lg shadow-purple-600/30 border border-amber-300/40">
+                <i class="fa-solid fa-chess-king text-white text-sm"></i>
+            </div>
+            <div>
+                <div class="flex items-center space-x-2">
+                    <h1 class="font-cinzel text-sm md:text-base font-extrabold tracking-widest bg-gradient-to-r from-amber-100 via-amber-200 to-purple-300 bg-clip-text text-transparent">WIZARD'S CHESS</h1>
+                    <span id="checkBadge" class="hidden px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-rose-600/90 text-white rounded-full check-banner">CHECK!</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span id="turnDot" class="w-2 h-2 rounded-full bg-amber-300 animate-pulse"></span>
+                    <span id="turnText" class="text-[11px] font-medium text-slate-300">White's Turn (Marble)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mode Selector Pill (Easy AI / Hard AI / 2 Player) -->
+        <div class="hidden md:flex items-center bg-black/45 p-1 rounded-full border border-white/10 space-x-1">
+            <button onclick="setMode('easy')" id="btnEasy" class="mode-btn active px-4 py-1.5 rounded-full text-xs font-semibold text-slate-300 transition-all flex items-center space-x-1.5">
+                <i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i>
+                <span>Easy AI</span>
+            </button>
+            <button onclick="setMode('hard')" id="btnHard" class="mode-btn px-4 py-1.5 rounded-full text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center space-x-1.5">
+                <i class="fa-solid fa-skull text-[11px]"></i>
+                <span>Hard AI</span>
+            </button>
+            <button onclick="setMode('pvp')" id="btnPvp" class="mode-btn px-4 py-1.5 rounded-full text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center space-x-1.5">
+                <i class="fa-solid fa-user-group text-[11px]"></i>
+                <span>2 Player</span>
+            </button>
+        </div>
+
+        <!-- Action Controls -->
+        <div class="flex items-center space-x-2">
+            <button onclick="requestHint()" class="icon-btn px-3 py-1.5 rounded-full bg-purple-500/15 hover:bg-purple-500/30 border border-purple-400/30 text-xs font-medium text-purple-200 flex items-center space-x-1.5" title="Magical Spell Hint">
+                <i class="fa-solid fa-bolt text-[11px] text-amber-300"></i>
+                <span class="hidden lg:inline">Hint</span>
+            </button>
+            <button onclick="cycleCameraView()" id="viewBtn" class="icon-btn px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-slate-200 flex items-center space-x-1.5" title="Switch Camera Angle">
+                <i class="fa-solid fa-video text-[11px] text-purple-300"></i>
+                <span id="viewBtnText" class="hidden sm:inline">White View</span>
+            </button>
+            <button onclick="toggleAutoOrbit()" id="orbitBtn" class="icon-btn w-8 h-8 rounded-full bg-white/5 border border-white/10 text-slate-300 flex items-center justify-center" title="Toggle Cinematic Orbit">
+                <i class="fa-solid fa-compass text-xs"></i>
+            </button>
+            <button onclick="undoMove()" class="icon-btn w-8 h-8 rounded-full bg-white/5 border border-white/10 text-slate-300 flex items-center justify-center" title="Undo Move">
+                <i class="fa-solid fa-rotate-left text-xs"></i>
+            </button>
+            <button onclick="resetGame()" class="icon-btn px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-700/90 to-amber-600/90 hover:from-amber-600 hover:to-amber-500 text-amber-50 border border-amber-400/40 text-xs font-semibold flex items-center space-x-1.5 shadow-lg shadow-amber-900/30">
+                <i class="fa-solid fa-rotate-right text-[11px]"></i>
+                <span>New Game</span>
+            </button>
+            <button onclick="toggleAudio()" id="audioBtn" class="icon-btn w-8 h-8 rounded-full bg-white/5 border border-white/10 text-slate-300 flex items-center justify-center" title="Toggle Sound">
+                <i id="audioIcon" class="fa-solid fa-volume-high text-xs"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Bottom-Right Battle Chronicle Card -->
+    <aside id="chronicleCard" class="fixed bottom-5 right-5 z-20 w-80 glass-pill rounded-2xl p-4 transition-all duration-300">
+        <div class="flex items-center justify-between mb-2.5">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-scroll text-amber-400 text-xs"></i>
+                <span class="font-cinzel text-xs font-bold tracking-wider text-slate-100 uppercase">Battle Chronicle</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span id="evalBadge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 text-slate-300 border border-white/10">Even</span>
+                <button onclick="toggleChronicle()" class="text-slate-400 hover:text-white text-xs p-1">
+                    <i id="chronicleToggleIcon" class="fa-solid fa-compress"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Balance of Power Bar -->
+        <div class="w-full h-1.5 rounded-full bg-purple-950 overflow-hidden mb-3 flex border border-white/10">
+            <div id="powerBarWhite" class="h-full bg-gradient-to-r from-amber-200 to-amber-400 transition-all duration-500" style="width: 50%;"></div>
+        </div>
+
+        <div id="chronicleBody" class="space-y-3">
+            <!-- Captured Pieces Grid -->
+            <div class="grid grid-cols-2 gap-2">
+                <div class="bg-black/40 rounded-xl p-2.5 border border-white/5">
+                    <div class="text-[9px] font-bold tracking-wider uppercase text-amber-300/85 mb-1">Shattered Obsidian</div>
+                    <div id="capturedObsidian" class="flex flex-wrap gap-1 min-h-[22px] text-sm text-purple-300"></div>
+                </div>
+                <div class="bg-black/40 rounded-xl p-2.5 border border-white/5">
+                    <div class="text-[9px] font-bold tracking-wider uppercase text-slate-400 mb-1">Shattered Marble</div>
+                    <div id="capturedMarble" class="flex flex-wrap gap-1 min-h-[22px] text-sm text-amber-100"></div>
+                </div>
+            </div>
+
+            <!-- Move History Log -->
+            <div id="moveHistoryContainer" class="bg-black/40 rounded-xl p-2.5 border border-white/5 h-28 overflow-y-auto text-xs space-y-1">
+                <div class="text-slate-400 italic text-center py-6 text-[11px]">Select any glowing marble piece to begin the duel.</div>
+            </div>
+
+            <!-- Legend -->
+            <div class="flex items-center justify-between text-[10px] text-slate-400 pt-1">
+                <div class="flex items-center space-x-2.5">
+                    <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-cyan-400 mr-1 shadow-sm shadow-cyan-400"></span>Move</span>
+                    <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-rose-500 mr-1 shadow-sm shadow-rose-500"></span>Shatter</span>
+                    <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-amber-400 mr-1"></span>Trail</span>
+                </div>
+                <span>Drag • Scroll</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Pawn Promotion Modal -->
+    <div id="promotionModal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center hidden">
+        <div class="glass-pill p-6 rounded-3xl max-w-sm w-full mx-4 text-center border border-amber-400/30 shadow-2xl">
+            <h3 class="font-cinzel text-lg font-bold text-amber-200 mb-1">Ascension Ritual</h3>
+            <p class="text-xs text-slate-300 mb-4">Choose the form your Pawn shall ascend into:</p>
+            <div class="grid grid-cols-4 gap-2.5">
+                <button onclick="confirmPromotion('q')" class="p-3 rounded-2xl bg-white/5 hover:bg-purple-600/40 border border-white/10 hover:border-amber-300/50 transition-all flex flex-col items-center">
+                    <span class="text-2xl text-amber-200 mb-1">♛</span>
+                    <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-200">Queen</span>
+                </button>
+                <button onclick="confirmPromotion('r')" class="p-3 rounded-2xl bg-white/5 hover:bg-purple-600/40 border border-white/10 hover:border-amber-300/50 transition-all flex flex-col items-center">
+                    <span class="text-2xl text-amber-200 mb-1">♜</span>
+                    <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-200">Rook</span>
+                </button>
+                <button onclick="confirmPromotion('b')" class="p-3 rounded-2xl bg-white/5 hover:bg-purple-600/40 border border-white/10 hover:border-amber-300/50 transition-all flex flex-col items-center">
+                    <span class="text-2xl text-amber-200 mb-1">♝</span>
+                    <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-200">Bishop</span>
+                </button>
+                <button onclick="confirmPromotion('n')" class="p-3 rounded-2xl bg-white/5 hover:bg-purple-600/40 border border-white/10 hover:border-amber-300/50 transition-all flex flex-col items-center">
+                    <span class="text-2xl text-amber-200 mb-1">♞</span>
+                    <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-200">Knight</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Victory / Game Over Modal -->
+    <div id="gameModal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center hidden">
+        <div class="glass-pill p-8 rounded-3xl max-w-md w-full mx-4 text-center border border-purple-400/30 shadow-2xl">
+            <div class="w-16 h-16 rounded-2xl bg-purple-600/20 text-amber-300 flex items-center justify-center mx-auto mb-4 text-2xl border border-amber-400/30 shadow-lg shadow-purple-900/40">
+                <i class="fa-solid fa-crown"></i>
+            </div>
+            <h2 id="modalTitle" class="font-cinzel text-2xl font-bold text-white mb-2">Checkmate!</h2>
+            <p id="modalDesc" class="text-sm text-slate-300 mb-6">The obsidian king has been shattered. Marble claims victory in the cathedral.</p>
+            <button onclick="resetGame()" class="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 font-bold text-white text-sm shadow-lg shadow-purple-600/40 transition-all font-cinzel tracking-wider">
+                New Battle
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. PROCEDURAL WEB AUDIO SYNTHESIZER
+        // ==========================================
+        let audioEnabled = true;
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function ensureAudio() {
+            if (!audioCtx) audioCtx = new AudioCtx();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function playSound(type) {
+            if (!audioEnabled) return;
+            try {
+                ensureAudio();
+                const now = audioCtx.currentTime;
+
+                if (type === 'select') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(540, now);
+                    osc.frequency.exponentialRampToValueAtTime(860, now + 0.09);
+                    gain.gain.setValueAtTime(0.11, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                } else if (type === 'move') {
+                    // Stone sliding resonance
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(190, now);
+                    osc.frequency.exponentialRampToValueAtTime(95, now + 0.18);
+                    gain.gain.setValueAtTime(0.22, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.19);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.19);
+                } else if (type === 'check') {
+                    // Cathedral bell chime warning
+                    [440, 554.37, 659.25].forEach((freq, idx) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.06);
+                        gain.gain.setValueAtTime(0.14, now + idx * 0.06);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start(now + idx * 0.06);
+                        osc.stop(now + 0.66);
+                    });
+                } else if (type === 'shatter') {
+                    // Deep arcane boom + crystalline stone shatter
+                    const sub = audioCtx.createOscillator();
+                    const subGain = audioCtx.createGain();
+                    sub.type = 'sawtooth';
+                    sub.frequency.setValueAtTime(140, now);
+                    sub.frequency.exponentialRampToValueAtTime(32, now + 0.42);
+                    subGain.gain.setValueAtTime(0.4, now);
+                    subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.43);
+                    sub.connect(subGain);
+                    subGain.connect(audioCtx.destination);
+                    sub.start(now);
+                    sub.stop(now + 0.43);
+
+                    const bufferSize = Math.floor(audioCtx.sampleRate * 0.5);
+                    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.14));
+                    }
+                    const noise = audioCtx.createBufferSource();
+                    noise.buffer = buffer;
+
+                    const filter = audioCtx.createBiquadFilter();
+                    filter.type = 'bandpass';
+                    filter.frequency.setValueAtTime(1250, now);
+                    filter.frequency.exponentialRampToValueAtTime(240, now + 0.5);
+
+                    const nGain = audioCtx.createGain();
+                    nGain.gain.setValueAtTime(0.45, now);
+                    nGain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+
+                    noise.connect(filter);
+                    filter.connect(nGain);
+                    nGain.connect(audioCtx.destination);
+                    noise.start(now);
+                }
+            } catch (e) {}
+        }
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            document.getElementById('audioIcon').className = audioEnabled
+                ? 'fa-solid fa-volume-high text-xs'
+                : 'fa-solid fa-volume-xmark text-xs text-rose-400';
+        }
+
+        // ==========================================
+        // 2. THREE.JS GRAND GOTHIC CATHEDRAL SCENE
+        // ==========================================
+        const container = document.getElementById('canvasContainer');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x110c1d);
+        scene.fog = new THREE.FogExp2(0x110c1d, 0.02);
+
+        const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.5, 200);
+        camera.position.set(-7.8, 9.2, 8.2);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.2;
+        container.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.maxPolarAngle = Math.PI / 2 - 0.05;
+        controls.minDistance = 5.5;
+        controls.maxDistance = 26;
+        controls.target.set(0, 0.2, 0);
+
+        // Cathedral Lighting
+        const ambientLight = new THREE.AmbientLight(0x4a3875, 1.5);
+        scene.add(ambientLight);
+
+        const mainLight = new THREE.DirectionalLight(0xfff5e6, 2.2);
+        mainLight.position.set(-11, 19, 11);
+        mainLight.castShadow = true;
+        mainLight.shadow.mapSize.width = 2048;
+        mainLight.shadow.mapSize.height = 2048;
+        mainLight.shadow.camera.near = 2;
+        mainLight.shadow.camera.far = 45;
+        const d = 9.5;
+        mainLight.shadow.camera.left = -d;
+        mainLight.shadow.camera.right = d;
+        mainLight.shadow.camera.top = d;
+        mainLight.shadow.camera.bottom = -d;
+        mainLight.shadow.bias = -0.0005;
+        scene.add(mainLight);
+
+        // Stained-Glass Atmospheric Point Lights
+        const violetLight = new THREE.PointLight(0xa855f7, 2.6, 30);
+        violetLight.position.set(10, 8, -10);
+        scene.add(violetLight);
+
+        const cyanLight = new THREE.PointLight(0x38bdf8, 1.4, 26);
+        cyanLight.position.set(0, 12, -14);
+        scene.add(cyanLight);
+
+        // Corner Brazier Torch Lights (Flickering in animation loop)
+        const torchLights = [];
+        const brazierFlames = [];
+
+        const envGroup = new THREE.Group();
+        scene.add(envGroup);
+
+        // Cathedral Floor
+        const floorMesh = new THREE.Mesh(
+            new THREE.PlaneGeometry(140, 140),
+            new THREE.MeshStandardMaterial({ color: 0x0d0917, roughness: 0.85, metalness: 0.15 })
+        );
+        floorMesh.rotation.x = -Math.PI / 2;
+        floorMesh.position.y = -1.25;
+        floorMesh.receiveShadow = true;
+        envGroup.add(floorMesh);
+
+        // Stepped Gothic Altar Pedestal (Strictly separated in Y so zero Z-fighting)
+        const altarMat = new THREE.MeshStandardMaterial({ color: 0x221a36, roughness: 0.65, metalness: 0.25 });
+        const step1 = new THREE.Mesh(new THREE.BoxGeometry(11.6, 0.35, 11.6), altarMat);
+        step1.position.y = -0.75;
+        step1.receiveShadow = true;
+        envGroup.add(step1);
+
+        const step2 = new THREE.Mesh(new THREE.BoxGeometry(10.1, 0.35, 10.1), altarMat);
+        step2.position.y = -0.40;
+        step2.receiveShadow = true;
+        envGroup.add(step2);
+
+        // Ornate Gold & Obsidian Border Frame (Top sits at Y = -0.05, well below squares at Y = +0.08)
+        const goldFrameMat = new THREE.MeshStandardMaterial({
+            color: 0xc5a059,
+            roughness: 0.3,
+            metalness: 0.75
+        });
+        const goldFrame = new THREE.Mesh(new THREE.BoxGeometry(8.85, 0.16, 8.85), goldFrameMat);
+        goldFrame.position.y = -0.13; // Top is at -0.05
+        goldFrame.receiveShadow = true;
+        envGroup.add(goldFrame);
+
+        // Corner Magical Braziers on the Altar
+        const brazierMat = new THREE.MeshStandardMaterial({ color: 0x1a1429, roughness: 0.4, metalness: 0.7 });
+        const flameMat = new THREE.MeshStandardMaterial({
+            color: 0xfbbf24,
+            emissive: 0xf59e0b,
+            emissiveIntensity: 1.8,
+            roughness: 0.1
+        });
+        [[-4.8, -4.8], [4.8, -4.8], [-4.8, 4.8], [4.8, 4.8]].forEach(([bx, bz]) => {
+            const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.38, 0.65, 12), brazierMat);
+            stand.position.set(bx, 0.1, bz);
+            stand.castShadow = true;
+            envGroup.add(stand);
+
+            const goldBowl = new THREE.Mesh(new THREE.TorusGeometry(0.26, 0.04, 10, 20), goldFrameMat);
+            goldBowl.rotation.x = Math.PI / 2;
+            goldBowl.position.set(bx, 0.43, bz);
+            envGroup.add(goldBowl);
+
+            const flame = new THREE.Mesh(new THREE.OctahedronGeometry(0.18, 1), flameMat);
+            flame.scale.set(1, 1.6, 1);
+            flame.position.set(bx, 0.62, bz);
+            envGroup.add(flame);
+            brazierFlames.push(flame);
+
+            const tLight = new THREE.PointLight(0xf59e0b, 1.1, 9);
+            tLight.position.set(bx, 0.9, bz);
+            scene.add(tLight);
+            torchLights.push(tLight);
+        });
+
+        // Fluted Gothic Cathedral Columns & Pointed Arches
+        const pillarMat = new THREE.MeshStandardMaterial({ color: 0x1e1730, roughness: 0.7, metalness: 0.25 });
+        const pillarCoords = [[-12, -12], [12, -12], [-12, 12], [12, 12], [-15, 0], [15, 0], [0, -15]];
+        pillarCoords.forEach(([px, pz]) => {
+            const col = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.68, 24, 16), pillarMat);
+            col.position.set(px, 10.5, pz);
+            col.castShadow = true;
+            col.receiveShadow = true;
+            envGroup.add(col);
+
+            const baseRing = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.95, 0.6, 16), goldFrameMat);
+            baseRing.position.set(px, -0.9, pz);
+            envGroup.add(baseRing);
+        });
+
+        // Stained Glass Rose Window Backdrop (North Cathedral Wall)
+        const roseGroup = new THREE.Group();
+        roseGroup.position.set(0, 8.5, -18);
+        const roseRing = new THREE.Mesh(
+            new THREE.TorusGeometry(4.2, 0.25, 16, 48),
+            new THREE.MeshStandardMaterial({ color: 0x2a2042, metalness: 0.6, roughness: 0.3 })
+        );
+        roseGroup.add(roseRing);
+        const stainedGlass = new THREE.Mesh(
+            new THREE.CircleGeometry(4.0, 32),
+            new THREE.MeshBasicMaterial({ color: 0x6d28d9, transparent: true, opacity: 0.28, side: THREE.DoubleSide })
+        );
+        roseGroup.add(stainedGlass);
+        envGroup.add(roseGroup);
+
+        // Floating Cathedral Dust Motes
+        const particleCount = 160;
+        const pGeo = new THREE.BufferGeometry();
+        const pPositions = new Float32Array(particleCount * 3);
+        for (let i = 0; i < particleCount * 3; i += 3) {
+            pPositions[i] = (Math.random() - 0.5) * 30;
+            pPositions[i + 1] = Math.random() * 15 + 0.4;
+            pPositions[i + 2] = (Math.random() - 0.5) * 30;
+        }
+        pGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
+        const dustParticles = new THREE.Points(
+            pGeo,
+            new THREE.PointsMaterial({ color: 0xfde68a, size: 0.08, transparent: true, opacity: 0.55 })
+        );
+        scene.add(dustParticles);
+
+        // ==========================================
+        // 3. 64-SQUARE GRID & COORDINATE ENGRAVINGS
+        // ==========================================
+        const boardGroup = new THREE.Group();
+        scene.add(boardGroup);
+
+        const squares = {};
+        const squareGeo = new THREE.BoxGeometry(0.98, 0.12, 0.98);
+        const lightSqMat = new THREE.MeshStandardMaterial({ color: 0xe9e5f3, roughness: 0.2, metalness: 0.12 });
+        const darkSqMat = new THREE.MeshStandardMaterial({ color: 0x352b4d, roughness: 0.3, metalness: 0.22 });
+
+        const selectedSqMat = new THREE.MeshStandardMaterial({
+            color: 0x67e8f9,
+            emissive: 0x06b6d4,
+            emissiveIntensity: 0.5,
+            roughness: 0.18
+        });
+        const moveSqMat = new THREE.MeshStandardMaterial({
+            color: 0x38bdf8,
+            emissive: 0x0284c7,
+            emissiveIntensity: 0.4,
+            roughness: 0.2
+        });
+        const attackSqMat = new THREE.MeshStandardMaterial({
+            color: 0xf43f5e,
+            emissive: 0xe11d48,
+            emissiveIntensity: 0.6,
+            roughness: 0.2
+        });
+        const lastMoveSqMat = new THREE.MeshStandardMaterial({
+            color: 0xfbbf24,
+            emissive: 0xd97706,
+            emissiveIntensity: 0.32,
+            roughness: 0.25
+        });
+        const hintSqMat = new THREE.MeshStandardMaterial({
+            color: 0xa855f7,
+            emissive: 0x9333ea,
+            emissiveIntensity: 0.65,
+            roughness: 0.2
+        });
+
+        function squareToPosition(sq) {
+            const fileIndex = sq.charCodeAt(0) - 97; // a=0 .. h=7
+            const rankIndex = parseInt(sq[1], 10) - 1; // 1=0 .. 8=7
+            const x = rankIndex - 3.5; // Rank 1 at -3.5 (Left), Rank 8 at +3.5 (Right)
+            const z = 3.5 - fileIndex; // File a at +3.5, File h at -3.5
+            return new THREE.Vector3(x, 0.08, z);
+        }
+
+        for (let r = 0; r < 8; r++) {
+            for (let f = 0; f < 8; f++) {
+                const fileChar = String.fromCharCode(97 + f);
+                const rankNum = r + 1;
+                const sqName = fileChar + rankNum;
+                const isLight = (r + f) % 2 !== 0;
+                const baseMat = isLight ? lightSqMat.clone() : darkSqMat.clone();
+
+                const mesh = new THREE.Mesh(squareGeo, baseMat);
+                const pos = squareToPosition(sqName);
+                mesh.position.set(pos.x, 0.02, pos.z); // Top surface at Y = +0.08
+                mesh.receiveShadow = true;
+                mesh.userData = { square: sqName, baseMat: baseMat };
+                boardGroup.add(mesh);
+                squares[sqName] = mesh;
+            }
+        }
+
+        // ==========================================
+        // 4. SCULPTED GOTHIC MARBLE & OBSIDIAN PIECES
+        // ==========================================
+        const pieceGroup = new THREE.Group();
+        scene.add(pieceGroup);
+
+        const effectsGroup = new THREE.Group();
+        scene.add(effectsGroup);
+
+        const marbleMat = new THREE.MeshStandardMaterial({
+            color: 0xf8fafc,
+            roughness: 0.14,
+            metalness: 0.18
+        });
+        const marbleGoldTrimMat = new THREE.MeshStandardMaterial({
+            color: 0xf59e0b,
+            roughness: 0.22,
+            metalness: 0.88,
+            emissive: 0x92400e,
+            emissiveIntensity: 0.2
+        });
+
+        const obsidianMat = new THREE.MeshStandardMaterial({
+            color: 0x100c1c,
+            roughness: 0.12,
+            metalness: 0.82
+        });
+        const obsidianTrimMat = new THREE.MeshStandardMaterial({
+            color: 0xc084fc,
+            roughness: 0.18,
+            metalness: 0.85,
+            emissive: 0x9333ea,
+            emissiveIntensity: 0.55
+        });
+
+        function buildPieceMesh(type, color) {
+            const group = new THREE.Group();
+            const mainMat = color === 'w' ? marbleMat : obsidianMat;
+            const accentMat = color === 'w' ? marbleGoldTrimMat : obsidianTrimMat;
+
+            // Stepped Gothic Pedestal
+            const baseLower = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.42, 0.09, 24), mainMat);
+            baseLower.position.y = 0.045;
+            baseLower.castShadow = true;
+            baseLower.receiveShadow = true;
+            group.add(baseLower);
+
+            const baseUpper = new THREE.Mesh(new THREE.CylinderGeometry(0.31, 0.36, 0.08, 24), mainMat);
+            baseUpper.position.y = 0.13;
+            baseUpper.castShadow = true;
+            group.add(baseUpper);
+
+            // Glowing Base Ring
+            const ring = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.028, 12, 24), accentMat);
+            ring.rotation.x = Math.PI / 2;
+            ring.position.y = 0.16;
+            group.add(ring);
+
+            // Fluted Column Body
+            const bodyHeight = type === 'p' ? 0.38 : (type === 'k' || type === 'q' ? 0.68 : 0.56);
+            const body = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.28, bodyHeight, 20), mainMat);
+            body.position.y = 0.17 + bodyHeight / 2;
+            body.castShadow = true;
+            body.receiveShadow = true;
+            group.add(body);
+
+            const topY = 0.17 + bodyHeight;
+
+            // Neck Collar
+            const collar = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.026, 10, 20), accentMat);
+            collar.rotation.x = Math.PI / 2;
+            collar.position.y = topY;
+            group.add(collar);
+
+            if (type === 'p') {
+                const head = new THREE.Mesh(new THREE.SphereGeometry(0.19, 20, 20), mainMat);
+                head.position.y = topY + 0.17;
+                head.castShadow = true;
+                group.add(head);
+
+                const finial = new THREE.Mesh(new THREE.OctahedronGeometry(0.055, 0), accentMat);
+                finial.position.y = topY + 0.38;
+                group.add(finial);
+            } else if (type === 'r') {
+                // Crenellated Gothic Battlement Tower
+                const turret = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.22, 0.26, 16), mainMat);
+                turret.position.y = topY + 0.13;
+                turret.castShadow = true;
+                group.add(turret);
+
+                for (let i = 0; i < 6; i++) {
+                    const ang = (i / 6) * Math.PI * 2;
+                    const merlon = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.11, 0.08), mainMat);
+                    merlon.position.set(Math.cos(ang) * 0.2, topY + 0.3, Math.sin(ang) * 0.2);
+                    merlon.rotation.y = -ang;
+                    merlon.castShadow = true;
+                    group.add(merlon);
+                }
+
+                const coreCrystal = new THREE.Mesh(new THREE.OctahedronGeometry(0.11, 0), accentMat);
+                coreCrystal.position.y = topY + 0.32;
+                group.add(coreCrystal);
+            } else if (type === 'n') {
+                // Sculpted Warhorse Knight
+                const dir = color === 'w' ? 1 : -1;
+                const neck = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.38, 0.22), mainMat);
+                neck.position.set(-0.03 * dir, topY + 0.18, 0);
+                neck.rotation.z = -0.25 * dir;
+                neck.castShadow = true;
+                group.add(neck);
+
+                const snout = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.34, 6), mainMat);
+                snout.position.set(0.14 * dir, topY + 0.28, 0);
+                snout.rotation.z = -Math.PI / 2 * dir - (0.3 * dir);
+                snout.castShadow = true;
+                group.add(snout);
+
+                const mane = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.38, 0.16), accentMat);
+                mane.position.set(-0.15 * dir, topY + 0.22, 0);
+                mane.rotation.z = -0.2 * dir;
+                group.add(mane);
+            } else if (type === 'b') {
+                // Gothic Bishop Mitre + Halo Ring
+                const mitre = new THREE.Mesh(new THREE.SphereGeometry(0.21, 20, 20), mainMat);
+                mitre.scale.set(1, 1.55, 1);
+                mitre.position.y = topY + 0.22;
+                mitre.castShadow = true;
+                group.add(mitre);
+
+                const sash = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.022, 10, 20), accentMat);
+                sash.rotation.x = Math.PI / 3;
+                sash.position.y = topY + 0.24;
+                group.add(sash);
+
+                const orb = new THREE.Mesh(new THREE.OctahedronGeometry(0.075, 0), accentMat);
+                orb.position.y = topY + 0.56;
+                group.add(orb);
+            } else if (type === 'q') {
+                // Multi-Spired Arch-Queen Coronet
+                const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.18, 0.32, 20), mainMat);
+                cup.position.y = topY + 0.16;
+                cup.castShadow = true;
+                group.add(cup);
+
+                const crownRing = new THREE.Mesh(new THREE.TorusGeometry(0.27, 0.032, 12, 24), accentMat);
+                crownRing.rotation.x = Math.PI / 2;
+                crownRing.position.y = topY + 0.32;
+                group.add(crownRing);
+
+                for (let i = 0; i < 6; i++) {
+                    const ang = (i / 6) * Math.PI * 2;
+                    const spike = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.16, 8), accentMat);
+                    spike.position.set(Math.cos(ang) * 0.24, topY + 0.4, Math.sin(ang) * 0.24);
+                    group.add(spike);
+                }
+
+                const centerGem = new THREE.Mesh(new THREE.SphereGeometry(0.12, 16, 16), mainMat);
+                centerGem.position.y = topY + 0.36;
+                group.add(centerGem);
+            } else if (type === 'k') {
+                // Grand Imperial Gothic King Crown & Cross
+                const crown = new THREE.Mesh(new THREE.CylinderGeometry(0.29, 0.2, 0.38, 20), mainMat);
+                crown.position.y = topY + 0.19;
+                crown.castShadow = true;
+                group.add(crown);
+
+                const band = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.035, 12, 24), accentMat);
+                band.rotation.x = Math.PI / 2;
+                band.position.y = topY + 0.38;
+                group.add(band);
+
+                const crossV = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.34, 0.085), accentMat);
+                crossV.position.y = topY + 0.56;
+                group.add(crossV);
+
+                const crossH = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.085, 0.25), accentMat);
+                crossH.position.y = topY + 0.6;
+                group.add(crossH);
+            }
+
+            return group;
+        }
+
+        // ==========================================
+        // 5. SHATTER, SHOCKWAVE & CAMERA SHAKE ENGINE
+        // ==========================================
+        const pieceMeshes = {};
+        const activeAnimations = [];
+        const activeShards = [];
+        const activeShockwaves = [];
+        let cameraShakeTime = 0;
+
+        function spawnShatterExplosion(worldPos, pieceColor) {
+            playSound('shatter');
+            cameraShakeTime = 0.32;
+
+            const shardMat = pieceColor === 'w' ? marbleMat : obsidianMat;
+            const glowMat = pieceColor === 'w' ? marbleGoldTrimMat : obsidianTrimMat;
+
+            // Magical Shockwave Ring on the Board
+            const waveGeo = new THREE.RingGeometry(0.15, 0.28, 32);
+            const waveMat = new THREE.MeshBasicMaterial({
+                color: pieceColor === 'w' ? 0xfbbf24 : 0xc084fc,
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.9
+            });
+            const waveMesh = new THREE.Mesh(waveGeo, waveMat);
+            waveMesh.rotation.x = -Math.PI / 2;
+            waveMesh.position.set(worldPos.x, 0.1, worldPos.z);
+            effectsGroup.add(waveMesh);
+            activeShockwaves.push({ mesh: waveMesh, age: 0, maxAge: 0.55 });
+
+            // 52 Polyhedral Stone & Glowing Crystal Shards
+            for (let i = 0; i < 52; i++) {
+                const radius = 0.055 + Math.random() * 0.09;
+                const geo = i % 3 === 0
+                    ? new THREE.OctahedronGeometry(radius, 0)
+                    : new THREE.DodecahedronGeometry(radius, 0);
+                const mat = (i % 3 === 0 ? glowMat : shardMat).clone();
+                mat.transparent = true;
+                mat.opacity = 1.0;
+
+                const shard = new THREE.Mesh(geo, mat);
+                shard.position.set(
+                    worldPos.x + (Math.random() - 0.5) * 0.35,
+                    worldPos.y + 0.15 + Math.random() * 0.75,
+                    worldPos.z + (Math.random() - 0.5) * 0.35
+                );
+                shard.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+                shard.castShadow = true;
+                effectsGroup.add(shard);
+
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 1.6 + Math.random() * 4.8;
+                activeShards.push({
+                    mesh: shard,
+                    vel: new THREE.Vector3(
+                        Math.cos(angle) * speed,
+                        2.8 + Math.random() * 4.8,
+                        Math.sin(angle) * speed
+                    ),
+                    rotVel: new THREE.Vector3(
+                        (Math.random() - 0.5) * 15,
+                        (Math.random() - 0.5) * 15,
+                        (Math.random() - 0.5) * 15
+                    ),
+                    age: 0,
+                    maxAge: 1.7 + Math.random() * 0.8
+                });
+            }
+        }
+
+        // ==========================================
+        // 6. CHESS LOGIC, PROMOTION, HINT & AI
+        // ==========================================
+        const chess = new Chess();
+        let gameMode = 'easy';
+        let selectedSquare = null;
+        let legalMovesForSelected = [];
+        let lastMoveSquares = [];
+        let isAnimating = false;
+        let pendingPromotionMove = null;
+        let captured = { w: [], b: [] };
+
+        function syncBoardMeshes() {
+            Object.values(pieceMeshes).forEach(m => pieceGroup.remove(m));
+            for (let k in pieceMeshes) delete pieceMeshes[k];
+
+            const board = chess.board();
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const p = board[r][c];
+                    if (p) {
+                        const file = String.fromCharCode(97 + c);
+                        const rank = 8 - r;
+                        const sq = file + rank;
+                        const mesh = buildPieceMesh(p.type, p.color);
+                        const pos = squareToPosition(sq);
+                        mesh.position.copy(pos);
+                        mesh.userData = { square: sq, type: p.type, color: p.color, baseY: pos.y };
+                        pieceGroup.add(mesh);
+                        pieceMeshes[sq] = mesh;
+                    }
+                }
+            }
+        }
+
+        function clearSquareHighlights() {
+            for (let sq in squares) {
+                squares[sq].material = squares[sq].userData.baseMat;
+            }
+            // Restore subtle trail for last move
+            lastMoveSquares.forEach(sq => {
+                if (squares[sq]) squares[sq].material = lastMoveSqMat;
+            });
+        }
+
+        function highlightSelection(sq, moves) {
+            clearSquareHighlights();
+            if (squares[sq]) squares[sq].material = selectedSqMat;
+            moves.forEach(m => {
+                if (squares[m.to]) {
+                    squares[m.to].material = (m.captured || m.flags.includes('e')) ? attackSqMat : moveSqMat;
+                }
+            });
+        }
+
+        function confirmPromotion(pieceChar) {
+            document.getElementById('promotionModal').classList.add('hidden');
+            if (pendingPromotionMove) {
+                const mv = pendingPromotionMove;
+                pendingPromotionMove = null;
+                executeChessMove({ from: mv.from, to: mv.to, promotion: pieceChar });
+            }
+        }
+
+        function executeChessMove(moveInput) {
+            const legalMoves = chess.moves({ verbose: true });
+            const isPromo = legalMoves.some(m => m.from === moveInput.from && m.to === moveInput.to && m.promotion);
+
+            // Show interactive Ascension Modal if human player is promoting a pawn
+            if (isPromo && !moveInput.promotion && (gameMode === 'pvp' || chess.turn() === 'w')) {
+                pendingPromotionMove = moveInput;
+                document.getElementById('promotionModal').classList.remove('hidden');
+                return;
+            }
+
+            const promoChoice = moveInput.promotion || 'q';
+            const matchedMove = legalMoves.find(
+                m => m.from === moveInput.from && m.to === moveInput.to && (!m.promotion || m.promotion === promoChoice)
+            );
+            if (!matchedMove) return;
+
+            isAnimating = true;
+            selectedSquare = null;
+            legalMovesForSelected = [];
+            lastMoveSquares = [matchedMove.from, matchedMove.to];
+            clearSquareHighlights();
+
+            const fromSq = matchedMove.from;
+            const toSq = matchedMove.to;
+            const attackerMesh = pieceMeshes[fromSq];
+
+            let capturedSq = null;
+            if (matchedMove.flags.includes('e')) {
+                capturedSq = toSq[0] + fromSq[1];
+            } else if (matchedMove.captured) {
+                capturedSq = toSq;
+            }
+
+            const victimMesh = capturedSq ? pieceMeshes[capturedSq] : null;
+            const victimColor = matchedMove.color === 'w' ? 'b' : 'w';
+
+            const moveResult = chess.move({
+                from: fromSq,
+                to: toSq,
+                promotion: matchedMove.promotion ? promoChoice : undefined
+            });
+
+            const startPos = attackerMesh ? attackerMesh.position.clone() : squareToPosition(fromSq);
+            const endPos = squareToPosition(toSq);
+            let elapsed = 0;
+            const duration = victimMesh ? 0.56 : 0.36;
+            let hasShattered = false;
+
+            activeAnimations.push({
+                update: (dt) => {
+                    elapsed += dt;
+                    const t = Math.min(elapsed / duration, 1);
+                    const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+
+                    if (attackerMesh) {
+                        attackerMesh.position.lerpVectors(startPos, endPos, ease);
+                        const arcHeight = victimMesh ? 1.55 : 0.65;
+                        attackerMesh.position.y = endPos.y + Math.sin(t * Math.PI) * arcHeight;
+                    }
+
+                    if (victimMesh && !hasShattered && t >= 0.72) {
+                        hasShattered = true;
+                        spawnShatterExplosion(victimMesh.position, victimColor);
+                        pieceGroup.remove(victimMesh);
+                        if (capturedSq && pieceMeshes[capturedSq] === victimMesh) {
+                            delete pieceMeshes[capturedSq];
+                        }
+                        captured[victimColor].push(matchedMove.captured);
+                        updateChronicleUI();
+                    }
+
+                    if (t >= 1) {
+                        if (!victimMesh) playSound('move');
+                        if (chess.in_check()) playSound('check');
+                        syncBoardMeshes();
+                        clearSquareHighlights();
+                        appendMoveLog(moveResult);
+                        updateTurnUI();
+                        updatePowerBalance();
+                        isAnimating = false;
+
+                        if (chess.game_over()) {
+                            showGameOverModal();
+                        } else if (gameMode !== 'pvp' && chess.turn() === 'b') {
+                            setTimeout(triggerAIMove, 420);
+                        }
+                        return true;
+                    }
+                    return false;
+                }
+            });
+        }
+
+        // Raycasting for clicking squares or pieces
+        const raycaster = new THREE.Raycaster();
+        const pointer = new THREE.Vector2();
+        let downPos = { x: 0, y: 0 };
+
+        window.addEventListener('pointerdown', (e) => {
+            downPos.x = e.clientX;
+            downPos.y = e.clientY;
+        });
+
+        window.addEventListener('pointerup', (e) => {
+            if (Math.hypot(e.clientX - downPos.x, e.clientY - downPos.y) > 6) return;
+            if (e.target.closest('header') || e.target.closest('aside') || e.target.closest('#gameModal') || e.target.closest('#promotionModal')) return;
+            if (isAnimating) return;
+            if (gameMode !== 'pvp' && chess.turn() === 'b') return;
+
+            pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+            pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(pointer, camera);
+
+            const targets = [...boardGroup.children, ...pieceGroup.children];
+            const hits = raycaster.intersectObjects(targets, true);
+            if (hits.length === 0) return;
+
+            let hitObj = hits[0].object;
+            while (hitObj && !hitObj.userData.square && hitObj.parent) {
+                hitObj = hitObj.parent;
+            }
+            const clickedSq = hitObj ? hitObj.userData.square : null;
+            if (!clickedSq) return;
+
+            const clickedPiece = chess.get(clickedSq);
+
+            if (!selectedSquare) {
+                if (clickedPiece && clickedPiece.color === chess.turn()) {
+                    selectedSquare = clickedSq;
+                    playSound('select');
+                    legalMovesForSelected = chess.moves({ square: clickedSq, verbose: true });
+                    highlightSelection(clickedSq, legalMovesForSelected);
+                }
+            } else {
+                if (clickedSq === selectedSquare) {
+                    selectedSquare = null;
+                    legalMovesForSelected = [];
+                    clearSquareHighlights();
+                } else if (legalMovesForSelected.some(m => m.to === clickedSq)) {
+                    executeChessMove({ from: selectedSquare, to: clickedSq });
+                } else if (clickedPiece && clickedPiece.color === chess.turn()) {
+                    selectedSquare = clickedSq;
+                    playSound('select');
+                    legalMovesForSelected = chess.moves({ square: clickedSq, verbose: true });
+                    highlightSelection(clickedSq, legalMovesForSelected);
+                } else {
+                    selectedSquare = null;
+                    legalMovesForSelected = [];
+                    clearSquareHighlights();
+                }
+            }
+        });
+
+        // AI Evaluation & Hint System
+        const pieceWeights = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
+
+        function evaluateBoard() {
+            let score = 0;
+            const b = chess.board();
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const p = b[r][c];
+                    if (p) {
+                        const val = pieceWeights[p.type] || 0;
+                        const centerBonus = (3.5 - Math.abs(3.5 - r)) * 6 + (3.5 - Math.abs(3.5 - c)) * 6;
+                        score += p.color === 'b' ? (val + centerBonus) : -(val + centerBonus);
+                    }
+                }
+            }
+            return score;
+        }
+
+        function updatePowerBalance() {
+            let wScore = 0;
+            let bScore = 0;
+            const vals = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
+            const b = chess.board();
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const p = b[r][c];
+                    if (p) {
+                        if (p.color === 'w') wScore += vals[p.type];
+                        else bScore += vals[p.type];
+                    }
+                }
+            }
+            const total = Math.max(1, wScore + bScore);
+            const wPct = Math.min(92, Math.max(8, (wScore / total) * 100));
+            document.getElementById('powerBarWhite').style.width = wPct + '%';
+
+            const diff = wScore - bScore;
+            const badge = document.getElementById('evalBadge');
+            if (diff > 0) badge.innerText = `Marble +${diff}`;
+            else if (diff < 0) badge.innerText = `Obsidian +${Math.abs(diff)}`;
+            else badge.innerText = 'Even';
+        }
+
+        function findBestMoveForColor(color) {
+            const moves = chess.moves({ verbose: true });
+            if (!moves.length) return null;
+            let bestMove = moves[0];
+            let bestVal = color === 'b' ? -Infinity : Infinity;
+
+            moves.forEach(m => {
+                chess.move(m);
+                const sc = evaluateBoard() + (Math.random() - 0.5) * 12;
+                chess.undo();
+                if (color === 'b' && sc > bestVal) {
+                    bestVal = sc;
+                    bestMove = m;
+                } else if (color === 'w' && sc < bestVal) {
+                    bestVal = sc;
+                    bestMove = m;
+                }
+            });
+            return bestMove;
+        }
+
+        function requestHint() {
+            if (isAnimating || chess.game_over()) return;
+            const best = findBestMoveForColor(chess.turn());
+            if (best) {
+                playSound('select');
+                clearSquareHighlights();
+                if (squares[best.from]) squares[best.from].material = hintSqMat;
+                if (squares[best.to]) squares[best.to].material = hintSqMat;
+            }
+        }
+
+        function triggerAIMove() {
+            if (chess.game_over() || isAnimating) return;
+            const moves = chess.moves({ verbose: true });
+            if (!moves.length) return;
+
+            let chosen = null;
+            if (gameMode === 'easy') {
+                const captures = moves.filter(m => m.captured);
+                if (captures.length > 0 && Math.random() < 0.45) {
+                    chosen = captures[Math.floor(Math.random() * captures.length)];
+                } else {
+                    chosen = moves[Math.floor(Math.random() * moves.length)];
+                }
+            } else {
+                let bestScore = -Infinity;
+                moves.forEach(m => {
+                    chess.move(m);
+                    const replies = chess.moves({ verbose: true });
+                    let worstReplyScore = Infinity;
+                    if (replies.length === 0) {
+                        worstReplyScore = chess.in_checkmate() ? 99999 : 0;
+                    } else {
+                        replies.forEach(rep => {
+                            chess.move(rep);
+                            const sc = evaluateBoard();
+                            if (sc < worstReplyScore) worstReplyScore = sc;
+                            chess.undo();
+                        });
+                    }
+                    chess.undo();
+                    const jitter = (Math.random() - 0.5) * 14;
+                    if (worstReplyScore + jitter > bestScore) {
+                        bestScore = worstReplyScore + jitter;
+                        chosen = m;
+                    }
+                });
+            }
+
+            if (chosen) {
+                executeChessMove({ from: chosen.from, to: chosen.to, promotion: 'q' });
+            }
+        }
+
+        // ==========================================
+        // 7. UI HELPERS & NAVIGATION
+        // ==========================================
+        const glyphs = { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' };
+
+        function updateChronicleUI() {
+            document.getElementById('capturedObsidian').innerHTML =
+                captured.b.map(t => `<span>${glyphs[t] || '♟'}</span>`).join('');
+            document.getElementById('capturedMarble').innerHTML =
+                captured.w.map(t => `<span>${glyphs[t] || '♟'}</span>`).join('');
+        }
+
+        function appendMoveLog() {
+            const container = document.getElementById('moveHistoryContainer');
+            const hist = chess.history();
+            let html = '';
+            for (let i = 0; i < hist.length; i += 2) {
+                const moveNum = Math.floor(i / 2) + 1;
+                const wMove = hist[i];
+                const bMove = hist[i + 1] || '';
+                html += `<div class="flex items-center justify-between px-3 py-1 rounded-lg bg-purple-950/45 border border-purple-500/20">
+                    <span class="text-slate-400 font-mono">${moveNum}.</span>
+                    <span class="text-amber-300 font-semibold">${wMove}</span>
+                    <span class="text-purple-300 font-semibold">${bMove}</span>
+                </div>`;
+            }
+            container.innerHTML = html;
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function updateTurnUI() {
+            const isWhite = chess.turn() === 'w';
+            const dot = document.getElementById('turnDot');
+            const text = document.getElementById('turnText');
+            const checkBadge = document.getElementById('checkBadge');
+
+            dot.className = isWhite
+                ? 'w-2 h-2 rounded-full bg-amber-300 animate-pulse'
+                : 'w-2 h-2 rounded-full bg-purple-400 animate-pulse';
+            text.innerText = isWhite ? "White's Turn (Marble)" : "Black's Turn (Obsidian)";
+
+            if (chess.in_check()) {
+                checkBadge.classList.remove('hidden');
+            } else {
+                checkBadge.classList.add('hidden');
+            }
+        }
+
+        function setMode(mode) {
+            gameMode = mode;
+            ['Easy', 'Hard', 'Pvp'].forEach(m => {
+                const btn = document.getElementById('btn' + m);
+                if (m.toLowerCase() === mode) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+            resetGame();
+        }
+
+        let currentViewIndex = 0;
+        const views = [
+            { name: 'White View', pos: [-7.8, 9.2, 8.2] },
+            { name: 'Black View', pos: [7.8, 9.2, -8.2] },
+            { name: 'Side Altar', pos: [0, 9.5, 10.8] },
+            { name: 'Top View', pos: [-0.1, 15.5, 0] }
+        ];
+
+        function cycleCameraView() {
+            currentViewIndex = (currentViewIndex + 1) % views.length;
+            const v = views[currentViewIndex];
+            document.getElementById('viewBtnText').innerText = v.name;
+            camera.position.set(v.pos[0], v.pos[1], v.pos[2]);
+            controls.target.set(0, 0.2, 0);
+            controls.update();
+        }
+
+        function toggleAutoOrbit() {
+            controls.autoRotate = !controls.autoRotate;
+            controls.autoRotateSpeed = 1.2;
+            const btn = document.getElementById('orbitBtn');
+            btn.className = controls.autoRotate
+                ? 'icon-btn w-8 h-8 rounded-full bg-purple-600 text-white border border-purple-300 flex items-center justify-center shadow-lg shadow-purple-600/40'
+                : 'icon-btn w-8 h-8 rounded-full bg-white/5 border border-white/10 text-slate-300 flex items-center justify-center';
+        }
+
+        function undoMove() {
+            if (isAnimating) return;
+            chess.undo();
+            if (gameMode !== 'pvp' && chess.turn() === 'b') chess.undo();
+            selectedSquare = null;
+            legalMovesForSelected = [];
+            lastMoveSquares = [];
+            clearSquareHighlights();
+            syncBoardMeshes();
+            updateTurnUI();
+            updatePowerBalance();
+            if (chess.history().length === 0) {
+                document.getElementById('moveHistoryContainer').innerHTML =
+                    '<div class="text-slate-400 italic text-center py-6 text-[11px]">Select any glowing marble piece to begin the duel.</div>';
+            } else {
+                appendMoveLog();
+            }
+        }
+
+        function resetGame() {
+            chess.reset();
+            selectedSquare = null;
+            legalMovesForSelected = [];
+            lastMoveSquares = [];
+            captured = { w: [], b: [] };
+            isAnimating = false;
+            clearSquareHighlights();
+            updateChronicleUI();
+            updatePowerBalance();
+            document.getElementById('moveHistoryContainer').innerHTML =
+                '<div class="text-slate-400 italic text-center py-6 text-[11px]">Select any glowing marble piece to begin the duel.</div>';
+            document.getElementById('gameModal').classList.add('hidden');
+            document.getElementById('promotionModal').classList.add('hidden');
+            syncBoardMeshes();
+            updateTurnUI();
+        }
+
+        function showGameOverModal() {
+            const modal = document.getElementById('gameModal');
+            const title = document.getElementById('modalTitle');
+            const desc = document.getElementById('modalDesc');
+            if (chess.in_checkmate()) {
+                const winner = chess.turn() === 'w' ? 'Obsidian (Black)' : 'Marble (White)';
+                title.innerText = 'Checkmate!';
+                desc.innerText = `${winner} has shattered the opposing king and conquered the Gothic Cathedral!`;
+            } else {
+                title.innerText = 'Stalemate / Draw';
+                desc.innerText = 'Neither army could shatter the opposing king.';
+            }
+            modal.classList.remove('hidden');
+        }
+
+        let chronicleCollapsed = false;
+        function toggleChronicle() {
+            chronicleCollapsed = !chronicleCollapsed;
+            document.getElementById('chronicleBody').style.display = chronicleCollapsed ? 'none' : 'block';
+            document.getElementById('chronicleToggleIcon').className = chronicleCollapsed
+                ? 'fa-solid fa-expand'
+                : 'fa-solid fa-compress';
+        }
+
+        // ==========================================
+        // 8. MAIN RENDER & PHYSICS LOOP
+        // ==========================================
+        syncBoardMeshes();
+        updateTurnUI();
+        updatePowerBalance();
+
+        const clock = new THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+            const dt = Math.min(clock.getDelta(), 0.1);
+            const elapsed = clock.getElapsedTime();
+
+            controls.update();
+
+            // Subtle Camera Impact Shake on Shatter
+            if (cameraShakeTime > 0) {
+                cameraShakeTime -= dt;
+                const intensity = cameraShakeTime * 0.22;
+                camera.position.x += (Math.random() - 0.5) * intensity;
+                camera.position.y += (Math.random() - 0.5) * intensity;
+            }
+
+            // Flicker Corner Braziers
+            torchLights.forEach((light, idx) => {
+                light.intensity = 1.0 + Math.sin(elapsed * 9 + idx * 2) * 0.22;
+            });
+            brazierFlames.forEach((flame, idx) => {
+                flame.rotation.y = elapsed * 2.5 + idx;
+                const sc = 1 + Math.sin(elapsed * 11 + idx) * 0.12;
+                flame.scale.set(sc, 1.5 + Math.cos(elapsed * 9 + idx) * 0.2, sc);
+            });
+
+            // Active Piece Move / Attack Animations
+            for (let i = activeAnimations.length - 1; i >= 0; i--) {
+                if (activeAnimations[i].update(dt)) {
+                    activeAnimations.splice(i, 1);
+                }
+            }
+
+            // Shockwave Rings Update
+            for (let i = activeShockwaves.length - 1; i >= 0; i--) {
+                const sw = activeShockwaves[i];
+                sw.age += dt;
+                const p = sw.age / sw.maxAge;
+                sw.mesh.scale.setScalar(1 + p * 6.5);
+                sw.mesh.material.opacity = Math.max(0, 0.9 * (1 - p));
+                if (sw.age >= sw.maxAge) {
+                    effectsGroup.remove(sw.mesh);
+                    sw.mesh.geometry.dispose();
+                    sw.mesh.material.dispose();
+                    activeShockwaves.splice(i, 1);
+                }
+            }
+
+            // Physics Shards Update (Gravity + Board Bounce + Fade Out)
+            for (let i = activeShards.length - 1; i >= 0; i--) {
+                const s = activeShards[i];
+                s.age += dt;
+                s.vel.y -= 16 * dt;
+                s.mesh.position.addScaledVector(s.vel, dt);
+                s.mesh.rotation.x += s.rotVel.x * dt;
+                s.mesh.rotation.y += s.rotVel.y * dt;
+                s.mesh.rotation.z += s.rotVel.z * dt;
+
+                if (s.mesh.position.y < 0.12) {
+                    s.mesh.position.y = 0.12;
+                    s.vel.y *= -0.45;
+                    s.vel.x *= 0.74;
+                    s.vel.z *= 0.74;
+                }
+
+                if (s.age > s.maxAge * 0.55) {
+                    const fade = 1 - (s.age - s.maxAge * 0.55) / (s.maxAge * 0.45);
+                    s.mesh.material.opacity = Math.max(0, fade);
+                    s.mesh.scale.setScalar(Math.max(0.01, fade));
+                }
+
+                if (s.age >= s.maxAge) {
+                    effectsGroup.remove(s.mesh);
+                    s.mesh.geometry.dispose();
+                    s.mesh.material.dispose();
+                    activeShards.splice(i, 1);
+                }
+            }
+
+            // Idle Breathing Hover for Stationary Pieces
+            if (!isAnimating) {
+                for (let sq in pieceMeshes) {
+                    const m = pieceMeshes[sq];
+                    m.position.y = m.userData.baseY + Math.sin(elapsed * 2.4 + m.position.x + m.position.z) * 0.018;
+                }
+            }
+
+            dustParticles.rotation.y = elapsed * 0.025;
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
