@@ -80,15 +80,10 @@
 </head>
 <body class="relative w-full h-full">
 
-    <!-- 3D WebGL Viewport -->
     <div id="canvasContainer" class="w-full h-full absolute inset-0 cursor-grab active:cursor-grabbing"></div>
 
-    <!-- Single-Level Responsive Top Navigation Bar -->
     <header class="fixed top-2.5 sm:top-4 left-2.5 sm:left-4 right-2.5 sm:right-4 z-30 glass-pill rounded-2xl px-3 sm:px-5 py-2 sm:py-2.5 flex flex-col md:flex-row md:items-center md:justify-between gap-2 lg:gap-4">
-        
-        <!-- Top Row on Mobile / Left on Desktop -->
         <div class="flex items-center justify-between w-full md:w-auto">
-            <!-- Brand & Turn Status -->
             <div class="flex items-center space-x-2.5 sm:space-x-3.5">
                 <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-purple-500 via-indigo-600 to-amber-600 flex items-center justify-center shadow-lg shadow-purple-600/30 border border-amber-300/40 shrink-0">
                     <i class="fa-solid fa-chess-king text-white text-xs sm:text-sm"></i>
@@ -104,83 +99,43 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Mobile Quick Action Buttons (Visible on < md) -->
             <div class="flex md:hidden items-center space-x-1 sm:space-x-1.5">
-                <button onclick="requestHint()" class="icon-btn w-8 h-8 rounded-full bg-purple-500/20 border border-purple-400/30 text-amber-300 flex items-center justify-center" title="Hint">
-                    <i class="fa-solid fa-bolt text-[10px] sm:text-xs"></i>
-                </button>
-                <button onclick="cycleCameraView()" class="icon-btn w-8 h-8 rounded-full bg-white/5 border border-white/10 text-purple-300 flex items-center justify-center" title="Switch Camera View">
-                    <i class="fa-solid fa-video text-[10px] sm:text-xs"></i>
-                </button>
-                <button onclick="undoMove()" class="icon-btn w-8 h-8 rounded-full bg-white/5 border border-white/10 text-slate-300 flex items-center justify-center" title="Undo">
-                    <i class="fa-solid fa-rotate-left text-[10px] sm:text-xs"></i>
-                </button>
-                <button onclick="resetGame()" class="icon-btn w-8 h-8 rounded-full bg-amber-600/80 border border-amber-400/40 text-amber-50 flex items-center justify-center" title="New Game">
-                    <i class="fa-solid fa-rotate-right text-[10px] sm:text-xs"></i>
-                </button>
-                <button onclick="toggleAudio()" class="icon-btn w-8 h-8 rounded-full bg-white/5 border border-white/10 text-slate-300 flex items-center justify-center" title="Audio">
-                    <i id="audioIconMobile" class="fa-solid fa-volume-high text-[10px] sm:text-xs"></i>
-                </button>
+                <button onclick="requestHint()" class="icon-btn w-8 h-8 rounded-full bg-purple-500/20 border border-purple-400/30 text-amber-300 flex items-center justify-center" title="Hint"><i class="fa-solid fa-bolt text-[10px] sm:text-xs"></i></button>
+                <button onclick="cycleCameraView()" class="icon-btn w-8 h-8 rounded-full bg-white/5 border border-white/10 text-purple-300 flex items-center justify-center" title="Switch Camera View"><i class="fa-solid fa-video text-[10px] sm:text-xs"></i></button>
+                <button onclick="undoMove()" class="icon-btn w-8 h-8 rounded-full bg-white/5 border border-white/10 text-slate-300 flex items-center justify-center" title="Undo"><i class="fa-solid fa-rotate-left text-[10px] sm:text-xs"></i></button>
+                <button onclick="resetGame()" class="icon-btn w-8 h-8 rounded-full bg-amber-600/80 border border-amber-400/40 text-amber-50 flex items-center justify-center" title="New Game"><i class="fa-solid fa-rotate-right text-[10px] sm:text-xs"></i></button>
+                <button onclick="toggleAudio()" class="icon-btn w-8 h-8 rounded-full bg-white/5 border border-white/10 text-slate-300 flex items-center justify-center" title="Audio"><i id="audioIconMobile" class="fa-solid fa-volume-high text-[10px] sm:text-xs"></i></button>
             </div>
         </div>
 
-        <!-- Mode Selector Pill (Accessible on BOTH Mobile & Desktop) -->
         <div class="flex items-center justify-center bg-black/45 p-1 rounded-full border border-white/10 space-x-0.5 sm:space-x-1 w-full md:w-auto overflow-x-auto shrink-0">
-            <button onclick="setMode('easy')" id="btnEasy" class="mode-btn active flex-1 md:flex-initial justify-center px-2 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-semibold text-slate-300 hover:text-white flex items-center space-x-1 sm:space-x-1.5 whitespace-nowrap">
-                <i class="fa-solid fa-wand-magic-sparkles"></i> <span class="hidden sm:inline">Easy</span><span class="sm:hidden">AI</span>
-            </button>
-            <button onclick="setMode('hard')" id="btnHard" class="mode-btn flex-1 md:flex-initial justify-center px-2 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-semibold text-slate-300 hover:text-white flex items-center space-x-1 sm:space-x-1.5 whitespace-nowrap">
-                <i class="fa-solid fa-skull"></i> <span class="hidden sm:inline">Hard</span><span class="sm:hidden">AI+</span>
-            </button>
-            <button onclick="setMode('pvp')" id="btnPvp" class="mode-btn flex-1 md:flex-initial justify-center px-2 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-semibold text-slate-300 hover:text-white flex items-center space-x-1 sm:space-x-1.5 whitespace-nowrap">
-                <i class="fa-solid fa-user-group"></i> <span>Local</span>
-            </button>
-            <button onclick="setMode('online')" id="btnOnline" class="mode-btn flex-1 md:flex-initial justify-center px-2 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-semibold text-amber-200 hover:text-amber-100 flex items-center space-x-1 sm:space-x-1.5 whitespace-nowrap border border-transparent">
-                <i class="fa-solid fa-globe animate-pulse"></i> <span>Online</span>
-            </button>
+            <button onclick="setMode('easy')" id="btnEasy" class="mode-btn active flex-1 md:flex-initial justify-center px-2 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-semibold text-slate-300 hover:text-white flex items-center space-x-1 sm:space-x-1.5 whitespace-nowrap"><i class="fa-solid fa-wand-magic-sparkles"></i> <span class="hidden sm:inline">Easy</span><span class="sm:hidden">AI</span></button>
+            <button onclick="setMode('hard')" id="btnHard" class="mode-btn flex-1 md:flex-initial justify-center px-2 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-semibold text-slate-300 hover:text-white flex items-center space-x-1 sm:space-x-1.5 whitespace-nowrap"><i class="fa-solid fa-skull"></i> <span class="hidden sm:inline">Hard</span><span class="sm:hidden">AI+</span></button>
+            <button onclick="setMode('pvp')" id="btnPvp" class="mode-btn flex-1 md:flex-initial justify-center px-2 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-semibold text-slate-300 hover:text-white flex items-center space-x-1 sm:space-x-1.5 whitespace-nowrap"><i class="fa-solid fa-user-group"></i> <span>Local</span></button>
+            <button onclick="setMode('online')" id="btnOnline" class="mode-btn flex-1 md:flex-initial justify-center px-2 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-semibold text-amber-200 hover:text-amber-100 flex items-center space-x-1 sm:space-x-1.5 whitespace-nowrap border border-transparent"><i class="fa-solid fa-globe animate-pulse"></i> <span>Online</span></button>
         </div>
 
-        <!-- Desktop Action Controls (Visible on md+) -->
         <div class="hidden md:flex items-center space-x-2 shrink-0">
-            <button onclick="requestHint()" class="icon-btn px-3 py-1.5 rounded-full bg-purple-500/15 hover:bg-purple-500/30 border border-purple-400/30 text-xs font-medium text-purple-200 flex items-center space-x-1.5" title="Magical Spell Hint">
-                <i class="fa-solid fa-bolt text-[11px] text-amber-300"></i>
-                <span class="hidden lg:inline">Hint</span>
-            </button>
-            <button onclick="cycleCameraView()" id="viewBtn" class="icon-btn px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-slate-200 flex items-center space-x-1.5" title="Switch Camera Angle">
-                <i class="fa-solid fa-video text-[11px] text-purple-300"></i>
-                <span id="viewBtnText" class="hidden xl:inline">White View</span>
-            </button>
-            <button onclick="toggleAutoOrbit()" id="orbitBtn" class="icon-btn w-8 h-8 rounded-full bg-white/5 border border-white/10 text-slate-300 flex items-center justify-center" title="Toggle Cinematic Orbit">
-                <i class="fa-solid fa-compass text-xs"></i>
-            </button>
-            <button onclick="undoMove()" class="icon-btn w-8 h-8 rounded-full bg-white/5 border border-white/10 text-slate-300 flex items-center justify-center" title="Undo Move">
-                <i class="fa-solid fa-rotate-left text-xs"></i>
-            </button>
-            <button onclick="resetGame()" class="icon-btn px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-700/90 to-amber-600/90 hover:from-amber-600 hover:to-amber-500 text-amber-50 border border-amber-400/40 text-xs font-semibold flex items-center space-x-1.5 shadow-lg shadow-amber-900/30">
-                <i class="fa-solid fa-rotate-right text-[11px]"></i>
-                <span class="hidden xl:inline">New Game</span>
-            </button>
-            <button onclick="toggleAudio()" id="audioBtn" class="icon-btn w-8 h-8 rounded-full bg-white/5 border border-white/10 text-slate-300 flex items-center justify-center" title="Toggle Sound">
-                <i id="audioIconDesktop" class="fa-solid fa-volume-high text-xs"></i>
-            </button>
+            <button onclick="requestHint()" class="icon-btn px-3 py-1.5 rounded-full bg-purple-500/15 hover:bg-purple-500/30 border border-purple-400/30 text-xs font-medium text-purple-200 flex items-center space-x-1.5" title="Magical Spell Hint"><i class="fa-solid fa-bolt text-[11px] text-amber-300"></i><span class="hidden lg:inline">Hint</span></button>
+            <button onclick="cycleCameraView()" id="viewBtn" class="icon-btn px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-slate-200 flex items-center space-x-1.5" title="Switch Camera Angle"><i class="fa-solid fa-video text-[11px] text-purple-300"></i><span id="viewBtnText" class="hidden xl:inline">White View</span></button>
+            <button onclick="toggleAutoOrbit()" id="orbitBtn" class="icon-btn w-8 h-8 rounded-full bg-white/5 border border-white/10 text-slate-300 flex items-center justify-center" title="Toggle Cinematic Orbit"><i class="fa-solid fa-compass text-xs"></i></button>
+            <button onclick="undoMove()" class="icon-btn w-8 h-8 rounded-full bg-white/5 border border-white/10 text-slate-300 flex items-center justify-center" title="Undo Move"><i class="fa-solid fa-rotate-left text-xs"></i></button>
+            <button onclick="resetGame()" class="icon-btn px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-700/90 to-amber-600/90 hover:from-amber-600 hover:to-amber-500 text-amber-50 border border-amber-400/40 text-xs font-semibold flex items-center space-x-1.5 shadow-lg shadow-amber-900/30"><i class="fa-solid fa-rotate-right text-[11px]"></i><span class="hidden xl:inline">New Game</span></button>
+            <button onclick="toggleAudio()" id="audioBtn" class="icon-btn w-8 h-8 rounded-full bg-white/5 border border-white/10 text-slate-300 flex items-center justify-center" title="Toggle Sound"><i id="audioIconDesktop" class="fa-solid fa-volume-high text-xs"></i></button>
         </div>
     </header>
 
-    <!-- Online Multiplayer Modal (The Arcane Portal) -->
     <div id="onlineModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center hidden p-4">
         <div class="glass-pill p-6 sm:p-8 rounded-3xl max-w-md w-full text-center border border-purple-500/30 shadow-2xl relative">
             <button onclick="closeOnlineModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white w-8 h-8 flex items-center justify-center rounded-full bg-white/5">
                 <i class="fa-solid fa-xmark"></i>
             </button>
-            
             <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-purple-600/20 text-purple-300 flex items-center justify-center mx-auto mb-4 text-xl sm:text-2xl border border-purple-400/30 shadow-lg shadow-purple-900/40">
                 <i class="fa-solid fa-dungeon"></i>
             </div>
             <h2 class="font-cinzel text-xl sm:text-2xl font-bold text-white mb-2">The Arcane Portal</h2>
             <p class="text-xs sm:text-sm text-slate-300 mb-6 px-2">Open a portal to duel wizards across the realm. Play instantly without servers.</p>
             
-            <!-- Host Game Section -->
             <div class="bg-black/40 rounded-2xl p-4 border border-white/5 mb-4">
                 <h3 class="text-[10px] font-bold tracking-widest uppercase text-amber-400 mb-2">Host a Duel</h3>
                 <p class="text-xs text-slate-400 mb-3">Share this code with your opponent. You will play as Marble (White).</p>
@@ -188,9 +143,7 @@
                     <div id="roomCodeDisplay" class="flex-1 bg-white/5 border border-white/10 rounded-xl py-2.5 text-center font-mono text-lg tracking-widest text-amber-200">
                         LOADING...
                     </div>
-                    <button onclick="copyRoomCode()" class="w-12 h-12 rounded-xl bg-purple-600 hover:bg-purple-500 text-white flex items-center justify-center transition-all shadow-md shadow-purple-900/50" title="Copy Code">
-                        <i class="fa-regular fa-copy"></i>
-                    </button>
+                    <button onclick="copyRoomCode()" class="w-12 h-12 rounded-xl bg-purple-600 hover:bg-purple-500 text-white flex items-center justify-center transition-all shadow-md shadow-purple-900/50" title="Copy Code"><i class="fa-regular fa-copy"></i></button>
                 </div>
                 <div id="hostStatusText" class="text-[11px] text-purple-300 mt-3 hidden animate-pulse">Waiting for challenger to step through...</div>
             </div>
@@ -201,22 +154,18 @@
                 <div class="h-px bg-white/10 flex-1"></div>
             </div>
 
-            <!-- Join Game Section -->
             <div class="bg-black/40 rounded-2xl p-4 border border-white/5">
                 <h3 class="text-[10px] font-bold tracking-widest uppercase text-cyan-400 mb-2">Join a Duel</h3>
                 <p class="text-xs text-slate-400 mb-3">Enter a friend's portal code. You will play as Obsidian (Black).</p>
                 <div class="flex items-center space-x-2">
                     <input type="text" id="joinInput" placeholder="WIZARD-XXXX" class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-center font-mono text-base sm:text-lg text-white placeholder-slate-600 uppercase focus:outline-none focus:border-cyan-400/50 transition-colors" maxlength="12">
-                    <button onclick="joinGame()" class="px-5 h-12 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold tracking-wider text-xs sm:text-sm flex items-center justify-center transition-all shadow-md shadow-cyan-900/50">
-                        JOIN
-                    </button>
+                    <button onclick="joinGame()" class="px-5 h-12 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold tracking-wider text-xs sm:text-sm flex items-center justify-center transition-all shadow-md shadow-cyan-900/50">JOIN</button>
                 </div>
                 <div id="joinStatusText" class="text-[11px] text-cyan-300 mt-3 hidden animate-pulse">Connecting to portal...</div>
             </div>
         </div>
     </div>
 
-    <!-- Responsive Battle Chronicle Card -->
     <aside id="chronicleCard" class="fixed bottom-2.5 sm:bottom-5 left-2.5 right-2.5 sm:left-auto sm:right-5 z-20 sm:w-80 glass-pill rounded-2xl p-3 sm:p-4 transition-all duration-300">
         <div class="flex items-center justify-between mb-2 cursor-pointer" onclick="toggleChronicle()">
             <div class="flex items-center space-x-2">
@@ -225,17 +174,12 @@
             </div>
             <div class="flex items-center space-x-2">
                 <span id="evalBadge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 text-slate-300 border border-white/10">Even</span>
-                <button class="text-slate-400 hover:text-white text-xs p-1" aria-label="Toggle Chronicle">
-                    <i id="chronicleToggleIcon" class="fa-solid fa-compress"></i>
-                </button>
+                <button class="text-slate-400 hover:text-white text-xs p-1" aria-label="Toggle Chronicle"><i id="chronicleToggleIcon" class="fa-solid fa-compress"></i></button>
             </div>
         </div>
-
-        <!-- Balance of Power Bar -->
         <div class="w-full h-1.5 rounded-full bg-purple-950 overflow-hidden mb-2.5 flex border border-white/10">
             <div id="powerBarWhite" class="h-full bg-gradient-to-r from-amber-200 to-amber-400 transition-all duration-500" style="width: 50%;"></div>
         </div>
-
         <div id="chronicleBody" class="space-y-2.5 sm:space-y-3">
             <div class="grid grid-cols-2 gap-2">
                 <div class="bg-black/40 rounded-xl p-2 sm:p-2.5 border border-white/5">
@@ -247,11 +191,9 @@
                     <div id="capturedMarble" class="flex flex-wrap gap-1 min-h-[20px] text-xs sm:text-sm text-amber-100"></div>
                 </div>
             </div>
-
             <div id="moveHistoryContainer" class="bg-black/40 rounded-xl p-2 sm:p-2.5 border border-white/5 h-20 sm:h-28 overflow-y-auto text-xs space-y-1">
                 <div class="text-slate-400 italic text-center py-4 sm:py-6 text-[11px]">Select any marble piece to begin.</div>
             </div>
-
             <div class="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
                 <div class="flex items-center space-x-2.5">
                     <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-cyan-400 mr-1 shadow-sm shadow-cyan-400"></span>Move</span>
@@ -262,48 +204,40 @@
         </div>
     </aside>
 
-    <!-- Pawn Promotion Modal -->
     <div id="promotionModal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center hidden">
         <div class="glass-pill p-6 rounded-3xl max-w-sm w-full mx-4 text-center border border-amber-400/30 shadow-2xl">
             <h3 class="font-cinzel text-lg font-bold text-amber-200 mb-1">Ascension Ritual</h3>
             <p class="text-xs text-slate-300 mb-4">Choose the form your Pawn shall ascend into:</p>
             <div class="grid grid-cols-4 gap-2.5">
-                <button onclick="confirmPromotion('q')" class="p-3 rounded-2xl bg-white/5 hover:bg-purple-600/40 border border-white/10 hover:border-amber-300/50 transition-all flex flex-col items-center">
-                    <span class="text-2xl text-amber-200 mb-1">♛</span>
-                    <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-200">Queen</span>
-                </button>
-                <button onclick="confirmPromotion('r')" class="p-3 rounded-2xl bg-white/5 hover:bg-purple-600/40 border border-white/10 hover:border-amber-300/50 transition-all flex flex-col items-center">
-                    <span class="text-2xl text-amber-200 mb-1">♜</span>
-                    <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-200">Rook</span>
-                </button>
-                <button onclick="confirmPromotion('b')" class="p-3 rounded-2xl bg-white/5 hover:bg-purple-600/40 border border-white/10 hover:border-amber-300/50 transition-all flex flex-col items-center">
-                    <span class="text-2xl text-amber-200 mb-1">♝</span>
-                    <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-200">Bishop</span>
-                </button>
-                <button onclick="confirmPromotion('n')" class="p-3 rounded-2xl bg-white/5 hover:bg-purple-600/40 border border-white/10 hover:border-amber-300/50 transition-all flex flex-col items-center">
-                    <span class="text-2xl text-amber-200 mb-1">♞</span>
-                    <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-200">Knight</span>
-                </button>
+                <button onclick="confirmPromotion('q')" class="p-3 rounded-2xl bg-white/5 hover:bg-purple-600/40 border border-white/10 hover:border-amber-300/50 transition-all flex flex-col items-center"><span class="text-2xl text-amber-200 mb-1">♛</span><span class="text-[10px] font-semibold uppercase tracking-wider text-slate-200">Queen</span></button>
+                <button onclick="confirmPromotion('r')" class="p-3 rounded-2xl bg-white/5 hover:bg-purple-600/40 border border-white/10 hover:border-amber-300/50 transition-all flex flex-col items-center"><span class="text-2xl text-amber-200 mb-1">♜</span><span class="text-[10px] font-semibold uppercase tracking-wider text-slate-200">Rook</span></button>
+                <button onclick="confirmPromotion('b')" class="p-3 rounded-2xl bg-white/5 hover:bg-purple-600/40 border border-white/10 hover:border-amber-300/50 transition-all flex flex-col items-center"><span class="text-2xl text-amber-200 mb-1">♝</span><span class="text-[10px] font-semibold uppercase tracking-wider text-slate-200">Bishop</span></button>
+                <button onclick="confirmPromotion('n')" class="p-3 rounded-2xl bg-white/5 hover:bg-purple-600/40 border border-white/10 hover:border-amber-300/50 transition-all flex flex-col items-center"><span class="text-2xl text-amber-200 mb-1">♞</span><span class="text-[10px] font-semibold uppercase tracking-wider text-slate-200">Knight</span></button>
             </div>
         </div>
     </div>
 
-    <!-- Victory / Game Over Modal -->
     <div id="gameModal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center hidden">
         <div class="glass-pill p-8 rounded-3xl max-w-md w-full mx-4 text-center border border-purple-400/30 shadow-2xl">
-            <div class="w-16 h-16 rounded-2xl bg-purple-600/20 text-amber-300 flex items-center justify-center mx-auto mb-4 text-2xl border border-amber-400/30 shadow-lg shadow-purple-900/40">
-                <i class="fa-solid fa-crown"></i>
-            </div>
+            <div class="w-16 h-16 rounded-2xl bg-purple-600/20 text-amber-300 flex items-center justify-center mx-auto mb-4 text-2xl border border-amber-400/30 shadow-lg shadow-purple-900/40"><i class="fa-solid fa-crown"></i></div>
             <h2 id="modalTitle" class="font-cinzel text-2xl font-bold text-white mb-2">Checkmate!</h2>
             <p id="modalDesc" class="text-sm text-slate-300 mb-6">The obsidian king has been shattered.</p>
-            <button onclick="resetGame()" class="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 font-bold text-white text-sm shadow-lg shadow-purple-600/40 transition-all font-cinzel tracking-wider">
-                New Battle
-            </button>
+            <button onclick="resetGame()" class="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 font-bold text-white text-sm shadow-lg shadow-purple-600/40 transition-all font-cinzel tracking-wider">New Battle</button>
         </div>
     </div>
 
-    <!-- AUDIO SYSTEM -->
     <script>
+        // --- GLOBALS & ENGINE ---
+        const chess = new Chess();
+        let gameMode = 'easy';
+        let selectedSquare = null;
+        let legalMovesForSelected = [];
+        let lastMoveSquares = [];
+        let isAnimating = false;
+        let pendingPromotionMove = null;
+        let captured = { w: [], b: [] };
+
+        // --- AUDIO SYSTEM ---
         let audioEnabled = true;
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         let audioCtx = null;
@@ -318,93 +252,41 @@
             try {
                 ensureAudio();
                 const now = audioCtx.currentTime;
-
                 if (type === 'select') {
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(540, now);
-                    osc.frequency.exponentialRampToValueAtTime(860, now + 0.09);
-                    gain.gain.setValueAtTime(0.11, now);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.start(now);
-                    osc.stop(now + 0.1);
+                    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(540, now); osc.frequency.exponentialRampToValueAtTime(860, now + 0.09);
+                    gain.gain.setValueAtTime(0.11, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+                    osc.connect(gain); gain.connect(audioCtx.destination); osc.start(now); osc.stop(now + 0.1);
                 } else if (type === 'move') {
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(190, now);
-                    osc.frequency.exponentialRampToValueAtTime(95, now + 0.18);
-                    gain.gain.setValueAtTime(0.22, now);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.19);
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.start(now);
-                    osc.stop(now + 0.19);
+                    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+                    osc.type = 'triangle'; osc.frequency.setValueAtTime(190, now); osc.frequency.exponentialRampToValueAtTime(95, now + 0.18);
+                    gain.gain.setValueAtTime(0.22, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.19);
+                    osc.connect(gain); gain.connect(audioCtx.destination); osc.start(now); osc.stop(now + 0.19);
                 } else if (type === 'check') {
                     [440, 554.37, 659.25].forEach((freq, idx) => {
-                        const osc = audioCtx.createOscillator();
-                        const gain = audioCtx.createGain();
-                        osc.type = 'sine';
-                        osc.frequency.setValueAtTime(freq, now + idx * 0.06);
-                        gain.gain.setValueAtTime(0.14, now + idx * 0.06);
-                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
-                        osc.connect(gain);
-                        gain.connect(audioCtx.destination);
-                        osc.start(now + idx * 0.06);
-                        osc.stop(now + 0.66);
+                        const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+                        osc.type = 'sine'; osc.frequency.setValueAtTime(freq, now + idx * 0.06);
+                        gain.gain.setValueAtTime(0.14, now + idx * 0.06); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+                        osc.connect(gain); gain.connect(audioCtx.destination); osc.start(now + idx * 0.06); osc.stop(now + 0.66);
                     });
                 } else if (type === 'shatter') {
-                    const sub = audioCtx.createOscillator();
-                    const subGain = audioCtx.createGain();
-                    sub.type = 'sawtooth';
-                    sub.frequency.setValueAtTime(140, now);
-                    sub.frequency.exponentialRampToValueAtTime(32, now + 0.42);
-                    subGain.gain.setValueAtTime(0.4, now);
-                    subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.43);
-                    sub.connect(subGain);
-                    subGain.connect(audioCtx.destination);
-                    sub.start(now);
-                    sub.stop(now + 0.43);
-
+                    const sub = audioCtx.createOscillator(); const subGain = audioCtx.createGain();
+                    sub.type = 'sawtooth'; sub.frequency.setValueAtTime(140, now); sub.frequency.exponentialRampToValueAtTime(32, now + 0.42);
+                    subGain.gain.setValueAtTime(0.4, now); subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.43);
+                    sub.connect(subGain); subGain.connect(audioCtx.destination); sub.start(now); sub.stop(now + 0.43);
                     const bufferSize = Math.floor(audioCtx.sampleRate * 0.5);
                     const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
                     const data = buffer.getChannelData(0);
-                    for (let i = 0; i < bufferSize; i++) {
-                        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.14));
-                    }
-                    const noise = audioCtx.createBufferSource();
-                    noise.buffer = buffer;
-
-                    const filter = audioCtx.createBiquadFilter();
-                    filter.type = 'bandpass';
-                    filter.frequency.setValueAtTime(1250, now);
-                    filter.frequency.exponentialRampToValueAtTime(240, now + 0.5);
-
-                    const nGain = audioCtx.createGain();
-                    nGain.gain.setValueAtTime(0.45, now);
-                    nGain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-
-                    noise.connect(filter);
-                    filter.connect(nGain);
-                    nGain.connect(audioCtx.destination);
-                    noise.start(now);
+                    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.14));
+                    const noise = audioCtx.createBufferSource(); noise.buffer = buffer;
+                    const filter = audioCtx.createBiquadFilter(); filter.type = 'bandpass'; filter.frequency.setValueAtTime(1250, now); filter.frequency.exponentialRampToValueAtTime(240, now + 0.5);
+                    const nGain = audioCtx.createGain(); nGain.gain.setValueAtTime(0.45, now); nGain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                    noise.connect(filter); filter.connect(nGain); nGain.connect(audioCtx.destination); noise.start(now);
                 } else if (type === 'portal') {
-                    // Portal connect sound
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(300, now);
-                    osc.frequency.exponentialRampToValueAtTime(800, now + 0.6);
-                    gain.gain.setValueAtTime(0, now);
-                    gain.gain.linearRampToValueAtTime(0.15, now + 0.3);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.start(now);
-                    osc.stop(now + 0.6);
+                    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(300, now); osc.frequency.exponentialRampToValueAtTime(800, now + 0.6);
+                    gain.gain.setValueAtTime(0, now); gain.gain.linearRampToValueAtTime(0.15, now + 0.3); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+                    osc.connect(gain); gain.connect(audioCtx.destination); osc.start(now); osc.stop(now + 0.6);
                 }
             } catch (e) {}
         }
@@ -412,54 +294,46 @@
         function toggleAudio() {
             audioEnabled = !audioEnabled;
             const cls = audioEnabled ? 'fa-solid fa-volume-high text-[10px] sm:text-xs' : 'fa-solid fa-volume-xmark text-[10px] sm:text-xs text-rose-400';
-            const dIcon = document.getElementById('audioIconDesktop');
-            const mIcon = document.getElementById('audioIconMobile');
-            if (dIcon) dIcon.className = cls;
-            if (mIcon) mIcon.className = cls;
+            if (document.getElementById('audioIconDesktop')) document.getElementById('audioIconDesktop').className = cls;
+            if (document.getElementById('audioIconMobile')) document.getElementById('audioIconMobile').className = cls;
         }
-    </script>
 
-    <!-- PEER.JS SERVERLESS MULTIPLAYER LOGIC -->
-    <script>
+        // --- PEER.JS SERVERLESS MULTIPLAYER ---
         let peer = null;
         let conn = null;
-        let myOnlineColor = null; // 'w' (Host), 'b' (Joiner), or null (offline)
+        let myOnlineColor = null; 
         let generatedRoomCode = '';
 
         function closeOnlineModal() {
             document.getElementById('onlineModal').classList.add('hidden');
-            // If they close without connecting, revert to easy mode
-            if (!conn || !conn.open) {
-                setMode('easy');
-            }
+            if (!conn || !conn.open) setMode('easy'); // Revert if cancelled
         }
 
         function copyRoomCode() {
             if (!generatedRoomCode) return;
-            navigator.clipboard.writeText(generatedRoomCode).then(() => {
-                alert("Room code copied to clipboard!");
-            });
+            navigator.clipboard.writeText(generatedRoomCode).then(() => alert("Room code copied to clipboard!"));
         }
 
         function initHost() {
-            if (peer) peer.destroy();
+            if (peer) { peer.destroy(); peer = null; }
             generatedRoomCode = 'WIZARD-' + Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('roomCodeDisplay').innerText = "LOADING...";
+            document.getElementById('hostStatusText').classList.add('hidden');
             
             peer = new Peer(generatedRoomCode);
             
             peer.on('open', (id) => {
                 document.getElementById('roomCodeDisplay').innerText = id;
                 document.getElementById('hostStatusText').classList.remove('hidden');
+                document.getElementById('hostStatusText').innerText = "Waiting for challenger to step through...";
             });
 
             peer.on('connection', (c) => {
                 conn = c;
                 setupConnectionListeners();
-                
                 conn.on('open', () => {
                     playSound('portal');
                     myOnlineColor = 'w';
-                    // Host tells joiner they are black
                     conn.send({ type: 'start', color: 'b' });
                     startGameOnline();
                 });
@@ -467,12 +341,8 @@
 
             peer.on('error', (err) => {
                 console.error(err);
-                if (err.type === 'unavailable-id') {
-                    // Extremely rare collision, try again
-                    initHost();
-                } else {
-                    alert("Network error: " + err.message);
-                }
+                if (err.type === 'unavailable-id') initHost();
+                else alert("Network error: " + err.message);
             });
         }
 
@@ -481,9 +351,10 @@
             if (!inputVal) return;
             
             document.getElementById('joinStatusText').classList.remove('hidden');
+            document.getElementById('joinStatusText').innerText = "Connecting to portal...";
             
-            if (peer) peer.destroy();
-            peer = new Peer(); // Random ID for joiner
+            if (peer) { peer.destroy(); peer = null; }
+            peer = new Peer(); 
             
             peer.on('open', () => {
                 conn = peer.connect(inputVal);
@@ -503,13 +374,10 @@
                     myOnlineColor = data.color;
                     startGameOnline();
                     if (myOnlineColor === 'b') {
-                        // Automatically flip camera for Black player!
-                        applyCameraView(1); 
-                        currentViewIndex = 1;
-                        document.getElementById('viewBtnText').innerText = "Black View";
+                        applyCameraView(1); currentViewIndex = 1;
+                        if (document.getElementById('viewBtnText')) document.getElementById('viewBtnText').innerText = "Black View";
                     }
                 } else if (data.type === 'move') {
-                    // Execute the move received from the opponent
                     executeChessMove(data.move, true);
                 } else if (data.type === 'reset') {
                     resetGame(true);
@@ -518,20 +386,17 @@
 
             conn.on('close', () => {
                 alert("The arcane portal collapsed. Opponent disconnected.");
-                myOnlineColor = null;
-                setMode('easy');
+                myOnlineColor = null; setMode('easy');
             });
         }
 
         function startGameOnline() {
             document.getElementById('onlineModal').classList.add('hidden');
             resetGame(true);
-            updateTurnUI(); // Will show (You) or (Opponent) based on myOnlineColor
+            updateTurnUI();
         }
-    </script>
 
-    <!-- 3D SCENE & CHESS ENGINE -->
-    <script>
+        // --- THREE.JS SCENE SETUP ---
         const container = document.getElementById('canvasContainer');
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x110c1d);
@@ -542,19 +407,13 @@
         const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.2;
+        renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.2;
         container.appendChild(renderer.domElement);
 
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.06;
-        controls.enablePan = false;
-        controls.maxPolarAngle = Math.PI / 2 - 0.05;
-        controls.minDistance = 5.5;
-        controls.maxDistance = 30;
+        controls.enableDamping = true; controls.dampingFactor = 0.06; controls.enablePan = false;
+        controls.maxPolarAngle = Math.PI / 2 - 0.05; controls.minDistance = 5.5; controls.maxDistance = 30;
         controls.target.set(0, 0.1, 0);
 
         function getResponsiveMultiplier() {
@@ -573,139 +432,67 @@
         ];
 
         function applyCameraView(index) {
-            const v = views[index];
-            const mult = getResponsiveMultiplier();
+            const v = views[index]; const mult = getResponsiveMultiplier();
             camera.position.set(v.pos[0] * mult, v.pos[1] * mult, v.pos[2] * mult);
-            controls.target.set(0, 0.1, 0);
-            controls.update();
+            controls.target.set(0, 0.1, 0); controls.update();
         }
         applyCameraView(0);
 
-        const ambientLight = new THREE.AmbientLight(0x4a3875, 1.55);
-        scene.add(ambientLight);
-
+        const ambientLight = new THREE.AmbientLight(0x4a3875, 1.55); scene.add(ambientLight);
         const mainLight = new THREE.DirectionalLight(0xfff5e6, 2.2);
-        mainLight.position.set(-11, 19, 11);
-        mainLight.castShadow = true;
-        mainLight.shadow.mapSize.width = 2048;
-        mainLight.shadow.mapSize.height = 2048;
-        mainLight.shadow.camera.near = 2;
-        mainLight.shadow.camera.far = 45;
-        const d = 9.5;
-        mainLight.shadow.camera.left = -d;
-        mainLight.shadow.camera.right = d;
-        mainLight.shadow.camera.top = d;
-        mainLight.shadow.camera.bottom = -d;
-        mainLight.shadow.bias = -0.0005;
+        mainLight.position.set(-11, 19, 11); mainLight.castShadow = true;
+        mainLight.shadow.mapSize.width = 2048; mainLight.shadow.mapSize.height = 2048;
+        mainLight.shadow.camera.near = 2; mainLight.shadow.camera.far = 45;
+        const d = 9.5; mainLight.shadow.camera.left = -d; mainLight.shadow.camera.right = d; mainLight.shadow.camera.top = d; mainLight.shadow.camera.bottom = -d; mainLight.shadow.bias = -0.0005;
         scene.add(mainLight);
 
-        const violetLight = new THREE.PointLight(0xa855f7, 2.6, 30);
-        violetLight.position.set(10, 8, -10);
-        scene.add(violetLight);
+        const violetLight = new THREE.PointLight(0xa855f7, 2.6, 30); violetLight.position.set(10, 8, -10); scene.add(violetLight);
+        const cyanLight = new THREE.PointLight(0x38bdf8, 1.4, 26); cyanLight.position.set(0, 12, -14); scene.add(cyanLight);
 
-        const cyanLight = new THREE.PointLight(0x38bdf8, 1.4, 26);
-        cyanLight.position.set(0, 12, -14);
-        scene.add(cyanLight);
+        const torchLights = []; const brazierFlames = [];
+        const envGroup = new THREE.Group(); scene.add(envGroup);
 
-        const torchLights = [];
-        const brazierFlames = [];
-
-        const envGroup = new THREE.Group();
-        scene.add(envGroup);
-
-        const floorMesh = new THREE.Mesh(
-            new THREE.PlaneGeometry(140, 140),
-            new THREE.MeshStandardMaterial({ color: 0x0d0917, roughness: 0.85, metalness: 0.15 })
-        );
-        floorMesh.rotation.x = -Math.PI / 2;
-        floorMesh.position.y = -1.25;
-        floorMesh.receiveShadow = true;
-        envGroup.add(floorMesh);
+        const floorMesh = new THREE.Mesh(new THREE.PlaneGeometry(140, 140), new THREE.MeshStandardMaterial({ color: 0x0d0917, roughness: 0.85, metalness: 0.15 }));
+        floorMesh.rotation.x = -Math.PI / 2; floorMesh.position.y = -1.25; floorMesh.receiveShadow = true; envGroup.add(floorMesh);
 
         const altarMat = new THREE.MeshStandardMaterial({ color: 0x221a36, roughness: 0.65, metalness: 0.25 });
-        const step1 = new THREE.Mesh(new THREE.BoxGeometry(11.6, 0.35, 11.6), altarMat);
-        step1.position.y = -0.75;
-        step1.receiveShadow = true;
-        envGroup.add(step1);
-
-        const step2 = new THREE.Mesh(new THREE.BoxGeometry(10.1, 0.35, 10.1), altarMat);
-        step2.position.y = -0.40;
-        step2.receiveShadow = true;
-        envGroup.add(step2);
+        const step1 = new THREE.Mesh(new THREE.BoxGeometry(11.6, 0.35, 11.6), altarMat); step1.position.y = -0.75; step1.receiveShadow = true; envGroup.add(step1);
+        const step2 = new THREE.Mesh(new THREE.BoxGeometry(10.1, 0.35, 10.1), altarMat); step2.position.y = -0.40; step2.receiveShadow = true; envGroup.add(step2);
 
         const goldFrameMat = new THREE.MeshStandardMaterial({ color: 0xc5a059, roughness: 0.3, metalness: 0.75 });
-        const goldFrame = new THREE.Mesh(new THREE.BoxGeometry(8.85, 0.16, 8.85), goldFrameMat);
-        goldFrame.position.y = -0.13;
-        goldFrame.receiveShadow = true;
-        envGroup.add(goldFrame);
+        const goldFrame = new THREE.Mesh(new THREE.BoxGeometry(8.85, 0.16, 8.85), goldFrameMat); goldFrame.position.y = -0.13; goldFrame.receiveShadow = true; envGroup.add(goldFrame);
 
         const brazierMat = new THREE.MeshStandardMaterial({ color: 0x1a1429, roughness: 0.4, metalness: 0.7 });
         const flameMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, emissive: 0xf59e0b, emissiveIntensity: 1.8, roughness: 0.1 });
         [[-4.8, -4.8], [4.8, -4.8], [-4.8, 4.8], [4.8, 4.8]].forEach(([bx, bz]) => {
-            const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.38, 0.65, 12), brazierMat);
-            stand.position.set(bx, 0.1, bz);
-            stand.castShadow = true;
-            envGroup.add(stand);
-
-            const goldBowl = new THREE.Mesh(new THREE.TorusGeometry(0.26, 0.04, 10, 20), goldFrameMat);
-            goldBowl.rotation.x = Math.PI / 2;
-            goldBowl.position.set(bx, 0.43, bz);
-            envGroup.add(goldBowl);
-
-            const flame = new THREE.Mesh(new THREE.OctahedronGeometry(0.18, 1), flameMat);
-            flame.scale.set(1, 1.6, 1);
-            flame.position.set(bx, 0.62, bz);
-            envGroup.add(flame);
-            brazierFlames.push(flame);
-
-            const tLight = new THREE.PointLight(0xf59e0b, 1.1, 9);
-            tLight.position.set(bx, 0.9, bz);
-            scene.add(tLight);
-            torchLights.push(tLight);
+            const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.38, 0.65, 12), brazierMat); stand.position.set(bx, 0.1, bz); stand.castShadow = true; envGroup.add(stand);
+            const goldBowl = new THREE.Mesh(new THREE.TorusGeometry(0.26, 0.04, 10, 20), goldFrameMat); goldBowl.rotation.x = Math.PI / 2; goldBowl.position.set(bx, 0.43, bz); envGroup.add(goldBowl);
+            const flame = new THREE.Mesh(new THREE.OctahedronGeometry(0.18, 1), flameMat); flame.scale.set(1, 1.6, 1); flame.position.set(bx, 0.62, bz); envGroup.add(flame); brazierFlames.push(flame);
+            const tLight = new THREE.PointLight(0xf59e0b, 1.1, 9); tLight.position.set(bx, 0.9, bz); scene.add(tLight); torchLights.push(tLight);
         });
 
         const pillarMat = new THREE.MeshStandardMaterial({ color: 0x1e1730, roughness: 0.7, metalness: 0.25 });
-        const pillarCoords = [[-12, -12], [12, -12], [-12, 12], [12, 12], [-15, 0], [15, 0], [0, -15]];
-        pillarCoords.forEach(([px, pz]) => {
-            const col = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.68, 24, 16), pillarMat);
-            col.position.set(px, 10.5, pz);
-            col.castShadow = true;
-            col.receiveShadow = true;
-            envGroup.add(col);
-
-            const baseRing = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.95, 0.6, 16), goldFrameMat);
-            baseRing.position.set(px, -0.9, pz);
-            envGroup.add(baseRing);
+        [[-12, -12], [12, -12], [-12, 12], [12, 12], [-15, 0], [15, 0], [0, -15]].forEach(([px, pz]) => {
+            const col = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.68, 24, 16), pillarMat); col.position.set(px, 10.5, pz); col.castShadow = true; col.receiveShadow = true; envGroup.add(col);
+            const baseRing = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.95, 0.6, 16), goldFrameMat); baseRing.position.set(px, -0.9, pz); envGroup.add(baseRing);
         });
 
-        const roseGroup = new THREE.Group();
-        roseGroup.position.set(0, 8.5, -18);
-        const roseRing = new THREE.Mesh(new THREE.TorusGeometry(4.2, 0.25, 16, 48), new THREE.MeshStandardMaterial({ color: 0x2a2042, metalness: 0.6, roughness: 0.3 }));
-        roseGroup.add(roseRing);
-        const stainedGlass = new THREE.Mesh(new THREE.CircleGeometry(4.0, 32), new THREE.MeshBasicMaterial({ color: 0x6d28d9, transparent: true, opacity: 0.28, side: THREE.DoubleSide }));
-        roseGroup.add(stainedGlass);
+        const roseGroup = new THREE.Group(); roseGroup.position.set(0, 8.5, -18);
+        const roseRing = new THREE.Mesh(new THREE.TorusGeometry(4.2, 0.25, 16, 48), new THREE.MeshStandardMaterial({ color: 0x2a2042, metalness: 0.6, roughness: 0.3 })); roseGroup.add(roseRing);
+        const stainedGlass = new THREE.Mesh(new THREE.CircleGeometry(4.0, 32), new THREE.MeshBasicMaterial({ color: 0x6d28d9, transparent: true, opacity: 0.28, side: THREE.DoubleSide })); roseGroup.add(stainedGlass);
         envGroup.add(roseGroup);
 
-        const particleCount = 160;
-        const pGeo = new THREE.BufferGeometry();
-        const pPositions = new Float32Array(particleCount * 3);
-        for (let i = 0; i < particleCount * 3; i += 3) {
-            pPositions[i] = (Math.random() - 0.5) * 30;
-            pPositions[i + 1] = Math.random() * 15 + 0.4;
-            pPositions[i + 2] = (Math.random() - 0.5) * 30;
-        }
+        const particleCount = 160; const pGeo = new THREE.BufferGeometry(); const pPositions = new Float32Array(particleCount * 3);
+        for (let i = 0; i < particleCount * 3; i += 3) { pPositions[i] = (Math.random() - 0.5) * 30; pPositions[i + 1] = Math.random() * 15 + 0.4; pPositions[i + 2] = (Math.random() - 0.5) * 30; }
         pGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
         const dustParticles = new THREE.Points(pGeo, new THREE.PointsMaterial({ color: 0xfde68a, size: 0.08, transparent: true, opacity: 0.55 }));
         scene.add(dustParticles);
 
-        const boardGroup = new THREE.Group();
-        scene.add(boardGroup);
-
+        const boardGroup = new THREE.Group(); scene.add(boardGroup);
         const squares = {};
         const squareGeo = new THREE.BoxGeometry(0.98, 0.12, 0.98);
         const lightSqMat = new THREE.MeshStandardMaterial({ color: 0xe9e5f3, roughness: 0.2, metalness: 0.12 });
         const darkSqMat = new THREE.MeshStandardMaterial({ color: 0x352b4d, roughness: 0.3, metalness: 0.22 });
-
         const selectedSqMat = new THREE.MeshStandardMaterial({ color: 0x67e8f9, emissive: 0x06b6d4, emissiveIntensity: 0.5, roughness: 0.18 });
         const moveSqMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.4, roughness: 0.2 });
         const attackSqMat = new THREE.MeshStandardMaterial({ color: 0xf43f5e, emissive: 0xe11d48, emissiveIntensity: 0.6, roughness: 0.2 });
@@ -713,8 +500,7 @@
         const hintSqMat = new THREE.MeshStandardMaterial({ color: 0xa855f7, emissive: 0x9333ea, emissiveIntensity: 0.65, roughness: 0.2 });
 
         function squareToPosition(sq) {
-            const fileIndex = sq.charCodeAt(0) - 97;
-            const rankIndex = parseInt(sq[1], 10) - 1;
+            const fileIndex = sq.charCodeAt(0) - 97; const rankIndex = parseInt(sq[1], 10) - 1;
             return new THREE.Vector3(rankIndex - 3.5, 0.08, 3.5 - fileIndex);
         }
 
@@ -724,19 +510,14 @@
                 const isLight = (r + f) % 2 !== 0;
                 const baseMat = isLight ? lightSqMat.clone() : darkSqMat.clone();
                 const mesh = new THREE.Mesh(squareGeo, baseMat);
-                const pos = squareToPosition(sqName);
-                mesh.position.set(pos.x, 0.02, pos.z);
-                mesh.receiveShadow = true;
-                mesh.userData = { square: sqName, baseMat: baseMat };
-                boardGroup.add(mesh);
-                squares[sqName] = mesh;
+                const pos = squareToPosition(sqName); mesh.position.set(pos.x, 0.02, pos.z); mesh.receiveShadow = true; mesh.userData = { square: sqName, baseMat: baseMat };
+                boardGroup.add(mesh); squares[sqName] = mesh;
             }
         }
 
-        const pieceGroup = new THREE.Group();
-        scene.add(pieceGroup);
-        const effectsGroup = new THREE.Group();
-        scene.add(effectsGroup);
+        // --- SINGLE PIECE GROUP DEFINITION ---
+        const pieceGroup = new THREE.Group(); scene.add(pieceGroup);
+        const effectsGroup = new THREE.Group(); scene.add(effectsGroup);
 
         const marbleMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.14, metalness: 0.18 });
         const marbleGoldTrimMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.22, metalness: 0.88, emissive: 0x92400e, emissiveIntensity: 0.2 });
@@ -749,154 +530,76 @@
             const mainMat = color === 'w' ? marbleMat : obsidianMat;
             const accentMat = color === 'w' ? marbleGoldTrimMat : obsidianTrimMat;
 
-            const touchHitbox = new THREE.Mesh(new THREE.CylinderGeometry(0.46, 0.46, 1.4, 8), hitboxMat);
-            touchHitbox.position.y = 0.7;
-            group.add(touchHitbox);
-
-            const baseLower = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.42, 0.09, 24), mainMat);
-            baseLower.position.y = 0.045;
-            baseLower.castShadow = true; baseLower.receiveShadow = true;
-            group.add(baseLower);
-
-            const baseUpper = new THREE.Mesh(new THREE.CylinderGeometry(0.31, 0.36, 0.08, 24), mainMat);
-            baseUpper.position.y = 0.13; baseUpper.castShadow = true;
-            group.add(baseUpper);
-
-            const ring = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.028, 12, 24), accentMat);
-            ring.rotation.x = Math.PI / 2; ring.position.y = 0.16;
-            group.add(ring);
-
+            const touchHitbox = new THREE.Mesh(new THREE.CylinderGeometry(0.46, 0.46, 1.4, 8), hitboxMat); touchHitbox.position.y = 0.7; group.add(touchHitbox);
+            const baseLower = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.42, 0.09, 24), mainMat); baseLower.position.y = 0.045; baseLower.castShadow = true; baseLower.receiveShadow = true; group.add(baseLower);
+            const baseUpper = new THREE.Mesh(new THREE.CylinderGeometry(0.31, 0.36, 0.08, 24), mainMat); baseUpper.position.y = 0.13; baseUpper.castShadow = true; group.add(baseUpper);
+            const ring = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.028, 12, 24), accentMat); ring.rotation.x = Math.PI / 2; ring.position.y = 0.16; group.add(ring);
             const bodyHeight = type === 'p' ? 0.38 : (type === 'k' || type === 'q' ? 0.68 : 0.56);
-            const body = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.28, bodyHeight, 20), mainMat);
-            body.position.y = 0.17 + bodyHeight / 2;
-            body.castShadow = true; body.receiveShadow = true;
-            group.add(body);
-
+            const body = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.28, bodyHeight, 20), mainMat); body.position.y = 0.17 + bodyHeight / 2; body.castShadow = true; body.receiveShadow = true; group.add(body);
             const topY = 0.17 + bodyHeight;
-            const collar = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.026, 10, 20), accentMat);
-            collar.rotation.x = Math.PI / 2; collar.position.y = topY;
-            group.add(collar);
+            const collar = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.026, 10, 20), accentMat); collar.rotation.x = Math.PI / 2; collar.position.y = topY; group.add(collar);
 
             if (type === 'p') {
-                const head = new THREE.Mesh(new THREE.SphereGeometry(0.19, 20, 20), mainMat);
-                head.position.y = topY + 0.17; head.castShadow = true; group.add(head);
-                const finial = new THREE.Mesh(new THREE.OctahedronGeometry(0.055, 0), accentMat);
-                finial.position.y = topY + 0.38; group.add(finial);
+                const head = new THREE.Mesh(new THREE.SphereGeometry(0.19, 20, 20), mainMat); head.position.y = topY + 0.17; head.castShadow = true; group.add(head);
+                const finial = new THREE.Mesh(new THREE.OctahedronGeometry(0.055, 0), accentMat); finial.position.y = topY + 0.38; group.add(finial);
             } else if (type === 'r') {
-                const turret = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.22, 0.26, 16), mainMat);
-                turret.position.y = topY + 0.13; turret.castShadow = true; group.add(turret);
+                const turret = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.22, 0.26, 16), mainMat); turret.position.y = topY + 0.13; turret.castShadow = true; group.add(turret);
                 for (let i = 0; i < 6; i++) {
-                    const ang = (i / 6) * Math.PI * 2;
-                    const merlon = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.11, 0.08), mainMat);
-                    merlon.position.set(Math.cos(ang) * 0.2, topY + 0.3, Math.sin(ang) * 0.2);
-                    merlon.rotation.y = -ang; merlon.castShadow = true; group.add(merlon);
+                    const ang = (i / 6) * Math.PI * 2; const merlon = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.11, 0.08), mainMat); merlon.position.set(Math.cos(ang) * 0.2, topY + 0.3, Math.sin(ang) * 0.2); merlon.rotation.y = -ang; merlon.castShadow = true; group.add(merlon);
                 }
-                const coreCrystal = new THREE.Mesh(new THREE.OctahedronGeometry(0.11, 0), accentMat);
-                coreCrystal.position.y = topY + 0.32; group.add(coreCrystal);
+                const coreCrystal = new THREE.Mesh(new THREE.OctahedronGeometry(0.11, 0), accentMat); coreCrystal.position.y = topY + 0.32; group.add(coreCrystal);
             } else if (type === 'n') {
                 const dir = color === 'w' ? 1 : -1;
-                const neck = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.38, 0.22), mainMat);
-                neck.position.set(-0.03 * dir, topY + 0.18, 0); neck.rotation.z = -0.25 * dir; neck.castShadow = true; group.add(neck);
-                const snout = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.34, 6), mainMat);
-                snout.position.set(0.14 * dir, topY + 0.28, 0); snout.rotation.z = -Math.PI / 2 * dir - (0.3 * dir); snout.castShadow = true; group.add(snout);
-                const mane = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.38, 0.16), accentMat);
-                mane.position.set(-0.15 * dir, topY + 0.22, 0); mane.rotation.z = -0.2 * dir; group.add(mane);
+                const neck = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.38, 0.22), mainMat); neck.position.set(-0.03 * dir, topY + 0.18, 0); neck.rotation.z = -0.25 * dir; neck.castShadow = true; group.add(neck);
+                const snout = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.34, 6), mainMat); snout.position.set(0.14 * dir, topY + 0.28, 0); snout.rotation.z = -Math.PI / 2 * dir - (0.3 * dir); snout.castShadow = true; group.add(snout);
+                const mane = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.38, 0.16), accentMat); mane.position.set(-0.15 * dir, topY + 0.22, 0); mane.rotation.z = -0.2 * dir; group.add(mane);
             } else if (type === 'b') {
-                const mitre = new THREE.Mesh(new THREE.SphereGeometry(0.21, 20, 20), mainMat);
-                mitre.scale.set(1, 1.55, 1); mitre.position.y = topY + 0.22; mitre.castShadow = true; group.add(mitre);
-                const sash = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.022, 10, 20), accentMat);
-                sash.rotation.x = Math.PI / 3; sash.position.y = topY + 0.24; group.add(sash);
-                const orb = new THREE.Mesh(new THREE.OctahedronGeometry(0.075, 0), accentMat);
-                orb.position.y = topY + 0.56; group.add(orb);
+                const mitre = new THREE.Mesh(new THREE.SphereGeometry(0.21, 20, 20), mainMat); mitre.scale.set(1, 1.55, 1); mitre.position.y = topY + 0.22; mitre.castShadow = true; group.add(mitre);
+                const sash = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.022, 10, 20), accentMat); sash.rotation.x = Math.PI / 3; sash.position.y = topY + 0.24; group.add(sash);
+                const orb = new THREE.Mesh(new THREE.OctahedronGeometry(0.075, 0), accentMat); orb.position.y = topY + 0.56; group.add(orb);
             } else if (type === 'q') {
-                const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.18, 0.32, 20), mainMat);
-                cup.position.y = topY + 0.16; cup.castShadow = true; group.add(cup);
-                const crownRing = new THREE.Mesh(new THREE.TorusGeometry(0.27, 0.032, 12, 24), accentMat);
-                crownRing.rotation.x = Math.PI / 2; crownRing.position.y = topY + 0.32; group.add(crownRing);
-                for (let i = 0; i < 6; i++) {
-                    const ang = (i / 6) * Math.PI * 2;
-                    const spike = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.16, 8), accentMat);
-                    spike.position.set(Math.cos(ang) * 0.24, topY + 0.4, Math.sin(ang) * 0.24); group.add(spike);
-                }
-                const centerGem = new THREE.Mesh(new THREE.SphereGeometry(0.12, 16, 16), mainMat);
-                centerGem.position.y = topY + 0.36; group.add(centerGem);
+                const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.18, 0.32, 20), mainMat); cup.position.y = topY + 0.16; cup.castShadow = true; group.add(cup);
+                const crownRing = new THREE.Mesh(new THREE.TorusGeometry(0.27, 0.032, 12, 24), accentMat); crownRing.rotation.x = Math.PI / 2; crownRing.position.y = topY + 0.32; group.add(crownRing);
+                for (let i = 0; i < 6; i++) { const ang = (i / 6) * Math.PI * 2; const spike = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.16, 8), accentMat); spike.position.set(Math.cos(ang) * 0.24, topY + 0.4, Math.sin(ang) * 0.24); group.add(spike); }
+                const centerGem = new THREE.Mesh(new THREE.SphereGeometry(0.12, 16, 16), mainMat); centerGem.position.y = topY + 0.36; group.add(centerGem);
             } else if (type === 'k') {
-                const crown = new THREE.Mesh(new THREE.CylinderGeometry(0.29, 0.2, 0.38, 20), mainMat);
-                crown.position.y = topY + 0.19; crown.castShadow = true; group.add(crown);
-                const band = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.035, 12, 24), accentMat);
-                band.rotation.x = Math.PI / 2; band.position.y = topY + 0.38; group.add(band);
-                const crossV = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.34, 0.085), accentMat);
-                crossV.position.y = topY + 0.56; group.add(crossV);
-                const crossH = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.085, 0.25), accentMat);
-                crossH.position.y = topY + 0.6; group.add(crossH);
+                const crown = new THREE.Mesh(new THREE.CylinderGeometry(0.29, 0.2, 0.38, 20), mainMat); crown.position.y = topY + 0.19; crown.castShadow = true; group.add(crown);
+                const band = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.035, 12, 24), accentMat); band.rotation.x = Math.PI / 2; band.position.y = topY + 0.38; group.add(band);
+                const crossV = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.34, 0.085), accentMat); crossV.position.y = topY + 0.56; group.add(crossV);
+                const crossH = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.085, 0.25), accentMat); crossH.position.y = topY + 0.6; group.add(crossH);
             }
             return group;
         }
 
         const pieceMeshes = {};
-        const activeAnimations = [];
-        const activeShards = [];
-        const activeShockwaves = [];
-        let cameraShakeTime = 0;
+        const activeAnimations = []; const activeShards = []; const activeShockwaves = []; let cameraShakeTime = 0;
 
         function spawnShatterExplosion(worldPos, pieceColor) {
-            playSound('shatter');
-            cameraShakeTime = 0.32;
-
-            const shardMat = pieceColor === 'w' ? marbleMat : obsidianMat;
-            const glowMat = pieceColor === 'w' ? marbleGoldTrimMat : obsidianTrimMat;
-
-            const waveGeo = new THREE.RingGeometry(0.15, 0.28, 32);
-            const waveMat = new THREE.MeshBasicMaterial({ color: pieceColor === 'w' ? 0xfbbf24 : 0xc084fc, side: THREE.DoubleSide, transparent: true, opacity: 0.9 });
-            const waveMesh = new THREE.Mesh(waveGeo, waveMat);
-            waveMesh.rotation.x = -Math.PI / 2; waveMesh.position.set(worldPos.x, 0.1, worldPos.z);
-            effectsGroup.add(waveMesh); activeShockwaves.push({ mesh: waveMesh, age: 0, maxAge: 0.55 });
-
+            playSound('shatter'); cameraShakeTime = 0.32;
+            const shardMat = pieceColor === 'w' ? marbleMat : obsidianMat; const glowMat = pieceColor === 'w' ? marbleGoldTrimMat : obsidianTrimMat;
+            const waveGeo = new THREE.RingGeometry(0.15, 0.28, 32); const waveMat = new THREE.MeshBasicMaterial({ color: pieceColor === 'w' ? 0xfbbf24 : 0xc084fc, side: THREE.DoubleSide, transparent: true, opacity: 0.9 });
+            const waveMesh = new THREE.Mesh(waveGeo, waveMat); waveMesh.rotation.x = -Math.PI / 2; waveMesh.position.set(worldPos.x, 0.1, worldPos.z); effectsGroup.add(waveMesh); activeShockwaves.push({ mesh: waveMesh, age: 0, maxAge: 0.55 });
             for (let i = 0; i < 52; i++) {
-                const radius = 0.055 + Math.random() * 0.09;
-                const geo = i % 3 === 0 ? new THREE.OctahedronGeometry(radius, 0) : new THREE.DodecahedronGeometry(radius, 0);
-                const mat = (i % 3 === 0 ? glowMat : shardMat).clone();
-                mat.transparent = true; mat.opacity = 1.0;
-                const shard = new THREE.Mesh(geo, mat);
-                shard.position.set(worldPos.x + (Math.random() - 0.5) * 0.35, worldPos.y + 0.15 + Math.random() * 0.75, worldPos.z + (Math.random() - 0.5) * 0.35);
-                shard.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
-                shard.castShadow = true; effectsGroup.add(shard);
-                const angle = Math.random() * Math.PI * 2;
-                const speed = 1.6 + Math.random() * 4.8;
-                activeShards.push({
-                    mesh: shard,
-                    vel: new THREE.Vector3(Math.cos(angle) * speed, 2.8 + Math.random() * 4.8, Math.sin(angle) * speed),
-                    rotVel: new THREE.Vector3((Math.random() - 0.5) * 15, (Math.random() - 0.5) * 15, (Math.random() - 0.5) * 15),
-                    age: 0, maxAge: 1.7 + Math.random() * 0.8
-                });
+                const radius = 0.055 + Math.random() * 0.09; const geo = i % 3 === 0 ? new THREE.OctahedronGeometry(radius, 0) : new THREE.DodecahedronGeometry(radius, 0); const mat = (i % 3 === 0 ? glowMat : shardMat).clone(); mat.transparent = true; mat.opacity = 1.0;
+                const shard = new THREE.Mesh(geo, mat); shard.position.set(worldPos.x + (Math.random() - 0.5) * 0.35, worldPos.y + 0.15 + Math.random() * 0.75, worldPos.z + (Math.random() - 0.5) * 0.35); shard.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI); shard.castShadow = true; effectsGroup.add(shard);
+                const angle = Math.random() * Math.PI * 2; const speed = 1.6 + Math.random() * 4.8;
+                activeShards.push({ mesh: shard, vel: new THREE.Vector3(Math.cos(angle) * speed, 2.8 + Math.random() * 4.8, Math.sin(angle) * speed), rotVel: new THREE.Vector3((Math.random() - 0.5) * 15, (Math.random() - 0.5) * 15, (Math.random() - 0.5) * 15), age: 0, maxAge: 1.7 + Math.random() * 0.8 });
             }
         }
 
-        const chess = new Chess();
-        let gameMode = 'easy';
-        let selectedSquare = null;
-        let legalMovesForSelected = [];
-        let lastMoveSquares = [];
-        let isAnimating = false;
-        let pendingPromotionMove = null;
-        let captured = { w: [], b: [] };
-
+        // --- GAME LOGIC ---
         function syncBoardMeshes() {
             Object.values(pieceMeshes).forEach(m => pieceGroup.remove(m));
             for (let k in pieceMeshes) delete pieceMeshes[k];
-
             const board = chess.board();
             for (let r = 0; r < 8; r++) {
                 for (let c = 0; c < 8; c++) {
                     const p = board[r][c];
                     if (p) {
                         const sq = String.fromCharCode(97 + c) + (8 - r);
-                        const mesh = buildPieceMesh(p.type, p.color);
-                        const pos = squareToPosition(sq);
-                        mesh.position.copy(pos);
-                        mesh.userData = { square: sq, type: p.type, color: p.color, baseY: pos.y };
-                        pieceGroup.add(mesh);
-                        pieceMeshes[sq] = mesh;
+                        const mesh = buildPieceMesh(p.type, p.color); const pos = squareToPosition(sq);
+                        mesh.position.copy(pos); mesh.userData = { square: sq, type: p.type, color: p.color, baseY: pos.y };
+                        pieceGroup.add(mesh); pieceMeshes[sq] = mesh;
                     }
                 }
             }
@@ -908,18 +611,14 @@
         }
 
         function highlightSelection(sq, moves) {
-            clearSquareHighlights();
-            if (squares[sq]) squares[sq].material = selectedSqMat;
-            moves.forEach(m => {
-                if (squares[m.to]) squares[m.to].material = (m.captured || m.flags.includes('e')) ? attackSqMat : moveSqMat;
-            });
+            clearSquareHighlights(); if (squares[sq]) squares[sq].material = selectedSqMat;
+            moves.forEach(m => { if (squares[m.to]) squares[m.to].material = (m.captured || m.flags.includes('e')) ? attackSqMat : moveSqMat; });
         }
 
         function confirmPromotion(pieceChar) {
             document.getElementById('promotionModal').classList.add('hidden');
             if (pendingPromotionMove) {
-                const mv = pendingPromotionMove;
-                pendingPromotionMove = null;
+                const mv = pendingPromotionMove; pendingPromotionMove = null;
                 executeChessMove({ from: mv.from, to: mv.to, promotion: pieceChar });
             }
         }
@@ -929,80 +628,41 @@
             const isPromo = legalMoves.some(m => m.from === moveInput.from && m.to === moveInput.to && m.promotion);
 
             if (isPromo && !moveInput.promotion && !isRemote && (gameMode !== 'online' || chess.turn() === myOnlineColor)) {
-                pendingPromotionMove = moveInput;
-                document.getElementById('promotionModal').classList.remove('hidden');
-                return;
+                pendingPromotionMove = moveInput; document.getElementById('promotionModal').classList.remove('hidden'); return;
             }
 
             const promoChoice = moveInput.promotion || 'q';
             const matchedMove = legalMoves.find(m => m.from === moveInput.from && m.to === moveInput.to && (!m.promotion || m.promotion === promoChoice));
             if (!matchedMove) return;
 
-            // Broadcast move to opponent if playing online
             if (gameMode === 'online' && conn && conn.open && !isRemote) {
                 conn.send({ type: 'move', move: { from: matchedMove.from, to: matchedMove.to, promotion: matchedMove.promotion ? promoChoice : undefined } });
             }
 
-            isAnimating = true;
-            selectedSquare = null;
-            legalMovesForSelected = [];
-            lastMoveSquares = [matchedMove.from, matchedMove.to];
-            clearSquareHighlights();
+            isAnimating = true; selectedSquare = null; legalMovesForSelected = []; lastMoveSquares = [matchedMove.from, matchedMove.to]; clearSquareHighlights();
 
-            const fromSq = matchedMove.from;
-            const toSq = matchedMove.to;
-            const attackerMesh = pieceMeshes[fromSq];
-
-            let capturedSq = null;
-            if (matchedMove.flags.includes('e')) capturedSq = toSq[0] + fromSq[1];
-            else if (matchedMove.captured) capturedSq = toSq;
-
-            const victimMesh = capturedSq ? pieceMeshes[capturedSq] : null;
-            const victimColor = matchedMove.color === 'w' ? 'b' : 'w';
+            const fromSq = matchedMove.from; const toSq = matchedMove.to; const attackerMesh = pieceMeshes[fromSq];
+            let capturedSq = null; if (matchedMove.flags.includes('e')) capturedSq = toSq[0] + fromSq[1]; else if (matchedMove.captured) capturedSq = toSq;
+            const victimMesh = capturedSq ? pieceMeshes[capturedSq] : null; const victimColor = matchedMove.color === 'w' ? 'b' : 'w';
 
             const moveResult = chess.move({ from: fromSq, to: toSq, promotion: matchedMove.promotion ? promoChoice : undefined });
-
-            const startPos = attackerMesh ? attackerMesh.position.clone() : squareToPosition(fromSq);
-            const endPos = squareToPosition(toSq);
-            let elapsed = 0;
-            const duration = victimMesh ? 0.56 : 0.36;
-            let hasShattered = false;
+            const startPos = attackerMesh ? attackerMesh.position.clone() : squareToPosition(fromSq); const endPos = squareToPosition(toSq);
+            let elapsed = 0; const duration = victimMesh ? 0.56 : 0.36; let hasShattered = false;
 
             activeAnimations.push({
                 update: (dt) => {
-                    elapsed += dt;
-                    const t = Math.min(elapsed / duration, 1);
-                    const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-
-                    if (attackerMesh) {
-                        attackerMesh.position.lerpVectors(startPos, endPos, ease);
-                        attackerMesh.position.y = endPos.y + Math.sin(t * Math.PI) * (victimMesh ? 1.55 : 0.65);
-                    }
-
+                    elapsed += dt; const t = Math.min(elapsed / duration, 1); const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+                    if (attackerMesh) { attackerMesh.position.lerpVectors(startPos, endPos, ease); attackerMesh.position.y = endPos.y + Math.sin(t * Math.PI) * (victimMesh ? 1.55 : 0.65); }
                     if (victimMesh && !hasShattered && t >= 0.72) {
-                        hasShattered = true;
-                        spawnShatterExplosion(victimMesh.position, victimColor);
-                        pieceGroup.remove(victimMesh);
+                        hasShattered = true; spawnShatterExplosion(victimMesh.position, victimColor); pieceGroup.remove(victimMesh);
                         if (capturedSq && pieceMeshes[capturedSq] === victimMesh) delete pieceMeshes[capturedSq];
-                        captured[victimColor].push(matchedMove.captured);
-                        updateChronicleUI();
+                        captured[victimColor].push(matchedMove.captured); updateChronicleUI();
                     }
-
                     if (t >= 1) {
-                        if (!victimMesh) playSound('move');
-                        if (chess.in_check()) playSound('check');
-                        syncBoardMeshes();
-                        clearSquareHighlights();
-                        appendMoveLog();
-                        updateTurnUI();
-                        updatePowerBalance();
-                        isAnimating = false;
-
-                        if (chess.game_over()) {
-                            showGameOverModal();
-                        } else if ((gameMode === 'easy' || gameMode === 'hard') && chess.turn() === 'b' && !isRemote) {
-                            setTimeout(triggerAIMove, 420);
-                        }
+                        if (!victimMesh) playSound('move'); if (chess.in_check()) playSound('check');
+                        syncBoardMeshes(); clearSquareHighlights(); appendMoveLog(); updateTurnUI(); updatePowerBalance(); isAnimating = false;
+                        if (chess.game_over()) showGameOverModal();
+                        else if ((gameMode === 'easy' || gameMode === 'hard') && chess.turn() === 'b' && !isRemote) setTimeout(triggerAIMove, 420);
                         return true;
                     }
                     return false;
@@ -1010,257 +670,167 @@
             });
         }
 
-        const raycaster = new THREE.Raycaster();
-        const pointer = new THREE.Vector2();
-        let downPos = { x: 0, y: 0 };
-
-        window.addEventListener('pointerdown', (e) => {
-            downPos.x = e.clientX;
-            downPos.y = e.clientY;
-        });
-
+        const raycaster = new THREE.Raycaster(); const pointer = new THREE.Vector2(); let downPos = { x: 0, y: 0 };
+        window.addEventListener('pointerdown', (e) => { downPos.x = e.clientX; downPos.y = e.clientY; });
         window.addEventListener('pointerup', (e) => {
             const maxDragDist = e.pointerType === 'touch' ? 18 : 7;
             if (Math.hypot(e.clientX - downPos.x, e.clientY - downPos.y) > maxDragDist) return;
             if (e.target.closest('header') || e.target.closest('aside') || e.target.closest('.fixed')) return;
             if (isAnimating) return;
-            
-            // ONLINE TURN GUARD: Don't allow moves if it's not your turn
             if (gameMode === 'online' && myOnlineColor && chess.turn() !== myOnlineColor) return;
-            
-            // AI TURN GUARD: Don't allow moves if it's the AI's turn
             if ((gameMode === 'easy' || gameMode === 'hard') && chess.turn() === 'b') return;
 
-            pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
-            pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            pointer.x = (e.clientX / window.innerWidth) * 2 - 1; pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
             raycaster.setFromCamera(pointer, camera);
-
-            const targets = [...boardGroup.children, ...pieceGroup.children];
-            const hits = raycaster.intersectObjects(targets, true);
+            const hits = raycaster.intersectObjects([...boardGroup.children, ...pieceGroup.children], true);
             if (hits.length === 0) return;
 
-            let hitObj = hits[0].object;
-            while (hitObj && !hitObj.userData.square && hitObj.parent) hitObj = hitObj.parent;
-            const clickedSq = hitObj ? hitObj.userData.square : null;
-            if (!clickedSq) return;
-
+            let hitObj = hits[0].object; while (hitObj && !hitObj.userData.square && hitObj.parent) hitObj = hitObj.parent;
+            const clickedSq = hitObj ? hitObj.userData.square : null; if (!clickedSq) return;
             const clickedPiece = chess.get(clickedSq);
 
             if (!selectedSquare) {
                 if (clickedPiece && clickedPiece.color === chess.turn()) {
-                    selectedSquare = clickedSq; playSound('select');
-                    legalMovesForSelected = chess.moves({ square: clickedSq, verbose: true });
-                    highlightSelection(clickedSq, legalMovesForSelected);
+                    selectedSquare = clickedSq; playSound('select'); legalMovesForSelected = chess.moves({ square: clickedSq, verbose: true }); highlightSelection(clickedSq, legalMovesForSelected);
                 }
             } else {
-                if (clickedSq === selectedSquare) {
-                    selectedSquare = null; legalMovesForSelected = []; clearSquareHighlights();
-                } else if (legalMovesForSelected.some(m => m.to === clickedSq)) {
-                    executeChessMove({ from: selectedSquare, to: clickedSq });
-                } else if (clickedPiece && clickedPiece.color === chess.turn()) {
-                    selectedSquare = clickedSq; playSound('select');
-                    legalMovesForSelected = chess.moves({ square: clickedSq, verbose: true });
-                    highlightSelection(clickedSq, legalMovesForSelected);
-                } else {
-                    selectedSquare = null; legalMovesForSelected = []; clearSquareHighlights();
-                }
+                if (clickedSq === selectedSquare) { selectedSquare = null; legalMovesForSelected = []; clearSquareHighlights(); }
+                else if (legalMovesForSelected.some(m => m.to === clickedSq)) executeChessMove({ from: selectedSquare, to: clickedSq });
+                else if (clickedPiece && clickedPiece.color === chess.turn()) { selectedSquare = clickedSq; playSound('select'); legalMovesForSelected = chess.moves({ square: clickedSq, verbose: true }); highlightSelection(clickedSq, legalMovesForSelected); }
+                else { selectedSquare = null; legalMovesForSelected = []; clearSquareHighlights(); }
             }
         });
 
         const pieceWeights = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
-
         function evaluateBoard() {
-            let score = 0;
-            const b = chess.board();
+            let score = 0; const b = chess.board();
             for (let r = 0; r < 8; r++) {
                 for (let c = 0; c < 8; c++) {
                     const p = b[r][c];
-                    if (p) {
-                        const val = pieceWeights[p.type] || 0;
-                        const centerBonus = (3.5 - Math.abs(3.5 - r)) * 6 + (3.5 - Math.abs(3.5 - c)) * 6;
-                        score += p.color === 'b' ? (val + centerBonus) : -(val + centerBonus);
-                    }
+                    if (p) { const val = pieceWeights[p.type] || 0; const centerBonus = (3.5 - Math.abs(3.5 - r)) * 6 + (3.5 - Math.abs(3.5 - c)) * 6; score += p.color === 'b' ? (val + centerBonus) : -(val + centerBonus); }
                 }
             }
             return score;
         }
 
         function updatePowerBalance() {
-            let wScore = 0; let bScore = 0;
-            const vals = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
-            const b = chess.board();
-            for (let r = 0; r < 8; r++) {
-                for (let c = 0; c < 8; c++) {
-                    const p = b[r][c];
-                    if (p) {
-                        if (p.color === 'w') wScore += vals[p.type];
-                        else bScore += vals[p.type];
-                    }
-                }
-            }
-            const total = Math.max(1, wScore + bScore);
-            const wPct = Math.min(92, Math.max(8, (wScore / total) * 100));
+            let wScore = 0; let bScore = 0; const vals = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 }; const b = chess.board();
+            for (let r = 0; r < 8; r++) { for (let c = 0; c < 8; c++) { const p = b[r][c]; if (p) { if (p.color === 'w') wScore += vals[p.type]; else bScore += vals[p.type]; } } }
+            const total = Math.max(1, wScore + bScore); const wPct = Math.min(92, Math.max(8, (wScore / total) * 100));
             document.getElementById('powerBarWhite').style.width = wPct + '%';
-
-            const diff = wScore - bScore;
-            const badge = document.getElementById('evalBadge');
-            if (diff > 0) badge.innerText = `Marble +${diff}`;
-            else if (diff < 0) badge.innerText = `Obsidian +${Math.abs(diff)}`;
-            else badge.innerText = 'Even';
+            const diff = wScore - bScore; const badge = document.getElementById('evalBadge');
+            if (diff > 0) badge.innerText = `Marble +${diff}`; else if (diff < 0) badge.innerText = `Obsidian +${Math.abs(diff)}`; else badge.innerText = 'Even';
         }
 
         function findBestMoveForColor(color) {
-            const moves = chess.moves({ verbose: true });
-            if (!moves.length) return null;
-            let bestMove = moves[0];
-            let bestVal = color === 'b' ? -Infinity : Infinity;
-
+            const moves = chess.moves({ verbose: true }); if (!moves.length) return null;
+            let bestMove = moves[0]; let bestVal = color === 'b' ? -Infinity : Infinity;
             moves.forEach(m => {
-                chess.move(m);
-                const sc = evaluateBoard() + (Math.random() - 0.5) * 12;
-                chess.undo();
-                if (color === 'b' && sc > bestVal) { bestVal = sc; bestMove = m; }
-                else if (color === 'w' && sc < bestVal) { bestVal = sc; bestMove = m; }
+                chess.move(m); const sc = evaluateBoard() + (Math.random() - 0.5) * 12; chess.undo();
+                if (color === 'b' && sc > bestVal) { bestVal = sc; bestMove = m; } else if (color === 'w' && sc < bestVal) { bestVal = sc; bestMove = m; }
             });
             return bestMove;
         }
 
         function requestHint() {
             if (isAnimating || chess.game_over()) return;
-            // Online hint restriction: Can only request a hint for YOUR color
             if (gameMode === 'online' && myOnlineColor && chess.turn() !== myOnlineColor) return;
-
             const best = findBestMoveForColor(chess.turn());
-            if (best) {
-                playSound('select');
-                clearSquareHighlights();
-                if (squares[best.from]) squares[best.from].material = hintSqMat;
-                if (squares[best.to]) squares[best.to].material = hintSqMat;
-            }
+            if (best) { playSound('select'); clearSquareHighlights(); if (squares[best.from]) squares[best.from].material = hintSqMat; if (squares[best.to]) squares[best.to].material = hintSqMat; }
         }
 
         function triggerAIMove() {
             if (chess.game_over() || isAnimating || gameMode === 'online' || gameMode === 'pvp') return;
-            const moves = chess.moves({ verbose: true });
-            if (!moves.length) return;
-
+            const moves = chess.moves({ verbose: true }); if (!moves.length) return;
             let chosen = null;
             if (gameMode === 'easy') {
                 const captures = moves.filter(m => m.captured);
-                if (captures.length > 0 && Math.random() < 0.45) {
-                    chosen = captures[Math.floor(Math.random() * captures.length)];
-                } else {
-                    chosen = moves[Math.floor(Math.random() * moves.length)];
-                }
+                if (captures.length > 0 && Math.random() < 0.45) chosen = captures[Math.floor(Math.random() * captures.length)]; else chosen = moves[Math.floor(Math.random() * moves.length)];
             } else {
                 let bestScore = -Infinity;
                 moves.forEach(m => {
-                    chess.move(m);
-                    const replies = chess.moves({ verbose: true });
-                    let worstReplyScore = Infinity;
-                    if (replies.length === 0) {
-                        worstReplyScore = chess.in_checkmate() ? 99999 : 0;
-                    } else {
-                        replies.forEach(rep => {
-                            chess.move(rep);
-                            const sc = evaluateBoard();
-                            if (sc < worstReplyScore) worstReplyScore = sc;
-                            chess.undo();
-                        });
-                    }
-                    chess.undo();
-                    const jitter = (Math.random() - 0.5) * 14;
-                    if (worstReplyScore + jitter > bestScore) {
-                        bestScore = worstReplyScore + jitter;
-                        chosen = m;
-                    }
+                    chess.move(m); const replies = chess.moves({ verbose: true }); let worstReplyScore = Infinity;
+                    if (replies.length === 0) worstReplyScore = chess.in_checkmate() ? 99999 : 0;
+                    else { replies.forEach(rep => { chess.move(rep); const sc = evaluateBoard(); if (sc < worstReplyScore) worstReplyScore = sc; chess.undo(); }); }
+                    chess.undo(); const jitter = (Math.random() - 0.5) * 14;
+                    if (worstReplyScore + jitter > bestScore) { bestScore = worstReplyScore + jitter; chosen = m; }
                 });
             }
             if (chosen) executeChessMove({ from: chosen.from, to: chosen.to, promotion: 'q' });
         }
 
         const glyphs = { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' };
-
         function updateChronicleUI() {
             document.getElementById('capturedObsidian').innerHTML = captured.b.map(t => `<span>${glyphs[t] || '♟'}</span>`).join('');
             document.getElementById('capturedMarble').innerHTML = captured.w.map(t => `<span>${glyphs[t] || '♟'}</span>`).join('');
         }
 
-        function updateTurnUI() {
-            const isWhite = chess.turn() === 'w';
-            const dot = document.getElementById('turnDot');
-            const text = document.getElementById('turnText');
-            const checkBadge = document.getElementById('checkBadge');
-
-            dot.className = isWhite ? 'w-2 h-2 rounded-full bg-amber-300 animate-pulse' : 'w-2 h-2 rounded-full bg-purple-400 animate-pulse';
-            
-            let turnStr = isWhite ? "White's Turn" : "Black's Turn";
-            if (gameMode === 'online' && myOnlineColor) {
-                turnStr += (chess.turn() === myOnlineColor) ? " (You)" : " (Opponent)";
-            } else {
-                turnStr += isWhite ? " (Marble)" : " (Obsidian)";
+        function appendMoveLog() {
+            const container = document.getElementById('moveHistoryContainer'); const hist = chess.history(); let html = '';
+            for (let i = 0; i < hist.length; i += 2) {
+                const moveNum = Math.floor(i / 2) + 1; const wMove = hist[i]; const bMove = hist[i + 1] || '';
+                html += `<div class="flex items-center justify-between px-3 py-1 rounded-lg bg-purple-950/45 border border-purple-500/20"><span class="text-slate-400 font-mono">${moveNum}.</span><span class="text-amber-300 font-semibold">${wMove}</span><span class="text-purple-300 font-semibold">${bMove}</span></div>`;
             }
-            text.innerText = turnStr;
+            container.innerHTML = html; container.scrollTop = container.scrollHeight;
+        }
 
-            if (chess.in_check()) checkBadge.classList.remove('hidden');
-            else checkBadge.classList.add('hidden');
+        function updateTurnUI() {
+            const isWhite = chess.turn() === 'w'; const dot = document.getElementById('turnDot'); const text = document.getElementById('turnText'); const checkBadge = document.getElementById('checkBadge');
+            dot.className = isWhite ? 'w-2 h-2 rounded-full bg-amber-300 animate-pulse' : 'w-2 h-2 rounded-full bg-purple-400 animate-pulse';
+            let turnStr = isWhite ? "White's Turn" : "Black's Turn";
+            if (gameMode === 'online' && myOnlineColor) turnStr += (chess.turn() === myOnlineColor) ? " (You)" : " (Opponent)"; else turnStr += isWhite ? " (Marble)" : " (Obsidian)";
+            text.innerText = turnStr;
+            if (chess.in_check()) checkBadge.classList.remove('hidden'); else checkBadge.classList.add('hidden');
         }
 
         function setMode(mode) {
             if (mode === 'online') {
                 document.getElementById('onlineModal').classList.remove('hidden');
-                // Keep the active UI state on 'online' if they open the modal
-                ['Easy', 'Hard', 'Pvp', 'Online'].forEach(m => {
-                    const btn = document.getElementById('btn' + m);
-                    if (btn) btn.classList.toggle('active', m.toLowerCase() === 'online');
-                });
+                ['Easy', 'Hard', 'Pvp', 'Online'].forEach(m => { const btn = document.getElementById('btn' + m); if (btn) btn.classList.toggle('active', m.toLowerCase() === 'online'); });
                 return; 
             }
-
-            // If switching AWAY from online mode
-            if (conn && conn.open) conn.close();
-            if (peer) { peer.destroy(); peer = null; }
-            myOnlineColor = null;
-            gameMode = mode;
-
-            ['Easy', 'Hard', 'Pvp', 'Online'].forEach(m => {
-                const btn = document.getElementById('btn' + m);
-                if (btn) btn.classList.toggle('active', m.toLowerCase() === mode);
-            });
+            if (conn && conn.open) conn.close(); if (peer) { peer.destroy(); peer = null; }
+            myOnlineColor = null; gameMode = mode;
+            ['Easy', 'Hard', 'Pvp', 'Online'].forEach(m => { const btn = document.getElementById('btn' + m); if (btn) btn.classList.toggle('active', m.toLowerCase() === mode); });
             resetGame();
+        }
+
+        function cycleCameraView() {
+            currentViewIndex = (currentViewIndex + 1) % views.length; const v = views[currentViewIndex];
+            const label = document.getElementById('viewBtnText'); if (label) label.innerText = v.name; applyCameraView(currentViewIndex);
+        }
+
+        function toggleAutoOrbit() {
+            controls.autoRotate = !controls.autoRotate; controls.autoRotateSpeed = 1.2;
+            const btn = document.getElementById('orbitBtn');
+            if (btn) btn.className = controls.autoRotate ? 'icon-btn w-8 h-8 rounded-full bg-purple-600 text-white border border-purple-300 flex items-center justify-center shadow-lg shadow-purple-600/40' : 'icon-btn w-8 h-8 rounded-full bg-white/5 border border-white/10 text-slate-300 flex items-center justify-center';
         }
 
         function undoMove() {
             if (isAnimating) return;
-            
-            if (gameMode === 'online') {
-                alert("Time magic is forbidden in the Arcane Portal (No undos in online multiplayer).");
-                return;
-            }
-
-            chess.undo();
-            if ((gameMode === 'easy' || gameMode === 'hard') && chess.turn() === 'b') chess.undo();
+            if (gameMode === 'online') { alert("Time magic is forbidden in the Arcane Portal (No undos in online multiplayer)."); return; }
+            chess.undo(); if ((gameMode === 'easy' || gameMode === 'hard') && chess.turn() === 'b') chess.undo();
             selectedSquare = null; legalMovesForSelected = []; lastMoveSquares = [];
             clearSquareHighlights(); syncBoardMeshes(); updateTurnUI(); updatePowerBalance();
-            if (chess.history().length === 0) {
-                document.getElementById('moveHistoryContainer').innerHTML = '<div class="text-slate-400 italic text-center py-4 sm:py-6 text-[11px]">Select any marble piece to begin.</div>';
-            } else {
-                appendMoveLog();
-            }
+            if (chess.history().length === 0) document.getElementById('moveHistoryContainer').innerHTML = '<div class="text-slate-400 italic text-center py-4 sm:py-6 text-[11px]">Select any marble piece to begin.</div>';
+            else appendMoveLog();
         }
 
         function resetGame(isRemote = false) {
-            // Broadcast reset if online
-            if (gameMode === 'online' && conn && conn.open && !isRemote) {
-                conn.send({ type: 'reset' });
-            }
-
+            if (gameMode === 'online' && conn && conn.open && !isRemote) conn.send({ type: 'reset' });
             chess.reset(); selectedSquare = null; legalMovesForSelected = []; lastMoveSquares = []; captured = { w: [], b: [] }; isAnimating = false;
             clearSquareHighlights(); updateChronicleUI(); updatePowerBalance();
             document.getElementById('moveHistoryContainer').innerHTML = '<div class="text-slate-400 italic text-center py-4 sm:py-6 text-[11px]">Select any marble piece to begin.</div>';
-            document.getElementById('gameModal').classList.add('hidden');
-            document.getElementById('promotionModal').classList.add('hidden');
+            document.getElementById('gameModal').classList.add('hidden'); document.getElementById('promotionModal').classList.add('hidden');
             syncBoardMeshes(); updateTurnUI();
+        }
+
+        function showGameOverModal() {
+            const modal = document.getElementById('gameModal'); const title = document.getElementById('modalTitle'); const desc = document.getElementById('modalDesc');
+            if (chess.in_checkmate()) {
+                const winner = chess.turn() === 'w' ? 'Obsidian (Black)' : 'Marble (White)'; title.innerText = 'Checkmate!'; desc.innerText = `${winner} has shattered the opposing king and conquered the Gothic Cathedral!`;
+            } else { title.innerText = 'Stalemate / Draw'; desc.innerText = 'Neither army could shatter the opposing king.'; }
+            modal.classList.remove('hidden');
         }
 
         let chronicleCollapsed = window.innerWidth < 640;
@@ -1271,59 +841,52 @@
         applyChronicleState();
         function toggleChronicle() { chronicleCollapsed = !chronicleCollapsed; applyChronicleState(); }
 
+        // --- INIT & ANIMATE ---
+        syncBoardMeshes(); updateTurnUI(); updatePowerBalance();
+
         const clock = new THREE.Clock();
         function animate() {
             requestAnimationFrame(animate);
-            const dt = Math.min(clock.getDelta(), 0.1);
-            const elapsed = clock.getElapsedTime();
-
+            const dt = Math.min(clock.getDelta(), 0.1); const elapsed = clock.getElapsedTime();
             controls.update();
 
             if (cameraShakeTime > 0) {
-                cameraShakeTime -= dt;
-                const intensity = cameraShakeTime * 0.22;
-                camera.position.x += (Math.random() - 0.5) * intensity;
-                camera.position.y += (Math.random() - 0.5) * intensity;
+                cameraShakeTime -= dt; const intensity = cameraShakeTime * 0.22;
+                camera.position.x += (Math.random() - 0.5) * intensity; camera.position.y += (Math.random() - 0.5) * intensity;
             }
 
             torchLights.forEach((light, idx) => { light.intensity = 1.0 + Math.sin(elapsed * 9 + idx * 2) * 0.22; });
             brazierFlames.forEach((flame, idx) => {
-                flame.rotation.y = elapsed * 2.5 + idx;
-                const sc = 1 + Math.sin(elapsed * 11 + idx) * 0.12;
-                flame.scale.set(sc, 1.5 + Math.cos(elapsed * 9 + idx) * 0.2, sc);
+                flame.rotation.y = elapsed * 2.5 + idx; const sc = 1 + Math.sin(elapsed * 11 + idx) * 0.12; flame.scale.set(sc, 1.5 + Math.cos(elapsed * 9 + idx) * 0.2, sc);
             });
 
-            for (let i = activeAnimations.length - 1; i >= 0; i--) {
-                if (activeAnimations[i].update(dt)) activeAnimations.splice(i, 1);
-            }
+            for (let i = activeAnimations.length - 1; i >= 0; i--) { if (activeAnimations[i].update(dt)) activeAnimations.splice(i, 1); }
             for (let i = activeShockwaves.length - 1; i >= 0; i--) {
                 const sw = activeShockwaves[i]; sw.age += dt; const p = sw.age / sw.maxAge;
                 sw.mesh.scale.setScalar(1 + p * 6.5); sw.mesh.material.opacity = Math.max(0, 0.9 * (1 - p));
                 if (sw.age >= sw.maxAge) { effectsGroup.remove(sw.mesh); sw.mesh.geometry.dispose(); sw.mesh.material.dispose(); activeShockwaves.splice(i, 1); }
             }
             for (let i = activeShards.length - 1; i >= 0; i--) {
-                const s = activeShards[i]; s.age += dt; s.vel.y -= 16 * dt;
-                s.mesh.position.addScaledVector(s.vel, dt);
+                const s = activeShards[i]; s.age += dt; s.vel.y -= 16 * dt; s.mesh.position.addScaledVector(s.vel, dt);
                 s.mesh.rotation.x += s.rotVel.x * dt; s.mesh.rotation.y += s.rotVel.y * dt; s.mesh.rotation.z += s.rotVel.z * dt;
                 if (s.mesh.position.y < 0.12) { s.mesh.position.y = 0.12; s.vel.y *= -0.45; s.vel.x *= 0.74; s.vel.z *= 0.74; }
-                if (s.age > s.maxAge * 0.55) {
-                    const fade = 1 - (s.age - s.maxAge * 0.55) / (s.maxAge * 0.45);
-                    s.mesh.material.opacity = Math.max(0, fade); s.mesh.scale.setScalar(Math.max(0.01, fade));
-                }
+                if (s.age > s.maxAge * 0.55) { const fade = 1 - (s.age - s.maxAge * 0.55) / (s.maxAge * 0.45); s.mesh.material.opacity = Math.max(0, fade); s.mesh.scale.setScalar(Math.max(0.01, fade)); }
                 if (s.age >= s.maxAge) { effectsGroup.remove(s.mesh); s.mesh.geometry.dispose(); s.mesh.material.dispose(); activeShards.splice(i, 1); }
             }
 
             if (!isAnimating) {
-                for (let sq in pieceMeshes) {
-                    const m = pieceMeshes[sq];
-                    m.position.y = m.userData.baseY + Math.sin(elapsed * 2.4 + m.position.x + m.position.z) * 0.018;
-                }
+                for (let sq in pieceMeshes) { const m = pieceMeshes[sq]; m.position.y = m.userData.baseY + Math.sin(elapsed * 2.4 + m.position.x + m.position.z) * 0.018; }
             }
 
             dustParticles.rotation.y = elapsed * 0.025;
             renderer.render(scene, camera);
         }
         animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight); applyCameraView(currentViewIndex);
+        });
     </script>
 </body>
 </html>
